@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoDB;
+import com.arangodb.ArangoDB.Builder;
 import com.arangodb.ArangoDBException;
 import com.arangodb.Protocol;
 
@@ -102,7 +103,7 @@ public class App {
 			if (caze == Case.READ) {
 				app.read(builder, batchSize, numThreads);
 			} else if (caze == Case.WRITE) {
-				app.setup();
+				app.setup(builder);
 				final DocumentCreator documentCreator = new DocumentCreator(
 						Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())));
 				app.write(builder, documentCreator, batchSize, numThreads);
@@ -146,8 +147,8 @@ public class App {
 		return Arrays.asList(values).stream().map(e -> e.name().toLowerCase()).reduce((a, b) -> a + "," + b).get();
 	}
 
-	private void setup() {
-		final ArangoDB arangoDB = new ArangoDB.Builder().build();
+	private void setup(final Builder builder) {
+		final ArangoDB arangoDB = builder.build();
 		try {
 			arangoDB.db(DB_NAME).drop();
 		} catch (final ArangoDBException e) {
