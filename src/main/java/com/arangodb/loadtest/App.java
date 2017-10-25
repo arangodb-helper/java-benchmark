@@ -53,6 +53,8 @@ public class App {
 
 	private static final String DEFAULT_IP = "127.0.0.1";
 	private static final Integer DEFAULT_PORT = 8529;
+	private static final String DEFAULT_USER = "root";
+	private static final String DEFAULT_PW = "";
 	private static final Integer DEFAULT_BATCH_SIZE = 1000;
 	private static final Integer DEFAULT_THREADS = 1;
 	private static final Integer DEFAULT_DOCUMENT_SIZE = 20;
@@ -61,6 +63,8 @@ public class App {
 	private static final String OPTION_CASE = "case";
 	private static final String OPTION_IP = "ip";
 	private static final String OPTION_PORT = "port";
+	private static final String OPTION_USER = "user";
+	private static final String OPTION_PW = "password";
 	private static final String OPTION_BATCH_SIZE = "batchSize";
 	private static final String OPTION_THREADS = "threads";
 	private static final String OPTION_DOCUMENT_SIZE = "docSize";
@@ -85,7 +89,9 @@ public class App {
 				.host(cmd.getOptionValue(OPTION_IP, DEFAULT_IP),
 					Integer.valueOf(cmd.getOptionValue(OPTION_PORT, DEFAULT_PORT.toString())))
 				.useProtocol(
-					Protocol.valueOf(cmd.getOptionValue(OPTION_PROTOCOL, DEFAULT_PROTOCOL.toString()).toUpperCase()));
+					Protocol.valueOf(cmd.getOptionValue(OPTION_PROTOCOL, DEFAULT_PROTOCOL.toString()).toUpperCase()))
+				.user(cmd.getOptionValue(OPTION_USER, DEFAULT_USER))
+				.password(cmd.getOptionValue(OPTION_PW, DEFAULT_PW));
 		try {
 			final String caseString = cmd.getOptionValue(OPTION_CASE);
 			if (caseString == null) {
@@ -116,6 +122,10 @@ public class App {
 				.withDescription(String.format("Server address (default: %s)", DEFAULT_IP)).create(OPTION_IP));
 		options.addOption(OptionBuilder.withArgName(OPTION_PORT).hasArg()
 				.withDescription(String.format("Server port (default: %s)", DEFAULT_PORT)).create(OPTION_PORT));
+		options.addOption(OptionBuilder.withArgName(OPTION_USER).hasArg()
+				.withDescription(String.format("User (default: %s)", DEFAULT_USER)).create(OPTION_USER));
+		options.addOption(OptionBuilder.withArgName(OPTION_PW).hasArg()
+				.withDescription(String.format("Password (default: %s)", DEFAULT_PW)).create(OPTION_PW));
 		options.addOption(OptionBuilder.withArgName(OPTION_BATCH_SIZE).hasArg()
 				.withDescription(
 					String.format("Number of documents processed in one batch (default: %s)", DEFAULT_BATCH_SIZE))
@@ -194,8 +204,8 @@ public class App {
 		private final DocumentWriter writer;
 		private final int batchSize;
 
-		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator documentCreator,
-			final int num, final int batchSize) {
+		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator documentCreator, final int num,
+			final int batchSize) {
 			super();
 			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num);
 			this.batchSize = batchSize;
