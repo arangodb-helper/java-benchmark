@@ -188,12 +188,12 @@ public class App {
 		try {
 			arangoDB.createDatabase(DB_NAME);
 		} catch (final ArangoDBException e) {
-			LOGGER.error(String.format("Failed to create database: %s", DB_NAME), e);
+			LOGGER.error(String.format("Failed to create database: %s", DB_NAME));
 		}
 		try {
 			arangoDB.db(DB_NAME).createCollection(COLLECTION_NAME);
 		} catch (final Exception e) {
-			LOGGER.error(String.format("Failed to create collection %s", COLLECTION_NAME), e);
+			LOGGER.error(String.format("Failed to create collection %s", COLLECTION_NAME));
 		}
 	}
 
