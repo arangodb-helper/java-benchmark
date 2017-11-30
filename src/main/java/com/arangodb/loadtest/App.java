@@ -37,6 +37,7 @@ import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDB.Builder;
 import com.arangodb.ArangoDBException;
 import com.arangodb.Protocol;
+import com.arangodb.entity.LoadBalancingStrategy;
 
 /**
  * 
@@ -61,6 +62,7 @@ public class App {
 	private static final Integer DEFAULT_DOCUMENT_SIZE = 20;
 	private static final Integer DEFAULT_DOCUMENT_FIELD_SIZE = 30;
 	private static final Protocol DEFAULT_PROTOCOL = Protocol.VST;
+	private static final LoadBalancingStrategy DEFAULT_LOAD_BALANCING_STRATEGY = LoadBalancingStrategy.NONE;
 
 	private static final String OPTION_CASE = "case";
 	private static final String OPTION_HOSTS = "hosts";
@@ -71,6 +73,7 @@ public class App {
 	private static final String OPTION_DOCUMENT_SIZE = "docSize";
 	private static final String OPTION_DOCUMENT_FIELD_SIZE = "docFieldSize";
 	private static final String OPTION_PROTOCOL = "protocol";
+	private static final String OPTION_LOAD_BALANCING_STRATEGY = "loadBalancing";
 
 	public static void main(final String[] args) {
 		final App app = new App();
@@ -90,8 +93,10 @@ public class App {
 		final ArangoDB.Builder builder = new ArangoDB.Builder()
 				.useProtocol(
 					Protocol.valueOf(cmd.getOptionValue(OPTION_PROTOCOL, DEFAULT_PROTOCOL.toString()).toUpperCase()))
-				.user(cmd.getOptionValue(OPTION_USER, DEFAULT_USER))
-				.password(cmd.getOptionValue(OPTION_PW, DEFAULT_PW));
+				.user(cmd.getOptionValue(OPTION_USER, DEFAULT_USER)).password(cmd.getOptionValue(OPTION_PW, DEFAULT_PW))
+				.loadBalancingStrategy(LoadBalancingStrategy.valueOf(
+					cmd.getOptionValue(OPTION_LOAD_BALANCING_STRATEGY, DEFAULT_LOAD_BALANCING_STRATEGY.toString())
+							.toUpperCase()));
 
 		final String[] hosts = cmd.getOptionValue(OPTION_HOSTS, DEFAULT_HOSTS).split(",");
 		Stream.of(hosts).map(e -> e.split(":")).filter(e -> e.length == 2)
@@ -148,6 +153,10 @@ public class App {
 		options.addOption(OptionBuilder.withArgName(OPTION_PROTOCOL).hasArg().withDescription(
 			String.format("Network protocol (%s) (default: %s)", enumOptions(Protocol.values()), DEFAULT_PROTOCOL))
 				.create(OPTION_PROTOCOL));
+		options.addOption(OptionBuilder.withArgName(OPTION_LOAD_BALANCING_STRATEGY).hasArg()
+				.withDescription(String.format("Load balancing strategy (%s) (default: %s)",
+					enumOptions(LoadBalancingStrategy.values()), DEFAULT_LOAD_BALANCING_STRATEGY))
+				.create(OPTION_LOAD_BALANCING_STRATEGY));
 		return options;
 	}
 
