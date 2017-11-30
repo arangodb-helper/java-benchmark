@@ -24,8 +24,7 @@ java -jar arangodb-load-test.jar -case read
 ## additional options
 
 ```
--ip <ip>                       Server address (default: 127.0.0.1)
--port <port>                   Server port (default: 8529)
+-hosts <hosts>                 comma separated host addresses (default: 127.0.0.1:8529)
 -user <user>                   User (default: root)
 -password <password>           Password (default: )
 -protocol <protocol>           Network protocol (vst,http_json,http_vpack) (default: VST)

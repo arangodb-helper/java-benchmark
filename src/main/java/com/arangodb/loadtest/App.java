@@ -21,6 +21,7 @@
 package com.arangodb.loadtest;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -52,8 +53,7 @@ public class App {
 	private static final String DB_NAME = "load_test_db";
 	private static final String COLLECTION_NAME = "load_test_collection";
 
-	private static final String DEFAULT_IP = "127.0.0.1";
-	private static final Integer DEFAULT_PORT = 8529;
+	private static final String DEFAULT_HOSTS = "127.0.0.1:8529";
 	private static final String DEFAULT_USER = "root";
 	private static final String DEFAULT_PW = "";
 	private static final Integer DEFAULT_BATCH_SIZE = 1000;
@@ -63,8 +63,7 @@ public class App {
 	private static final Protocol DEFAULT_PROTOCOL = Protocol.VST;
 
 	private static final String OPTION_CASE = "case";
-	private static final String OPTION_IP = "ip";
-	private static final String OPTION_PORT = "port";
+	private static final String OPTION_HOSTS = "hosts";
 	private static final String OPTION_USER = "user";
 	private static final String OPTION_PW = "password";
 	private static final String OPTION_BATCH_SIZE = "batchSize";
@@ -89,12 +88,14 @@ public class App {
 		final int batchSize = Integer.valueOf(cmd.getOptionValue(OPTION_BATCH_SIZE, DEFAULT_BATCH_SIZE.toString()));
 		final int numThreads = Integer.valueOf(cmd.getOptionValue(OPTION_THREADS, DEFAULT_THREADS.toString()));
 		final ArangoDB.Builder builder = new ArangoDB.Builder()
-				.host(cmd.getOptionValue(OPTION_IP, DEFAULT_IP),
-					Integer.valueOf(cmd.getOptionValue(OPTION_PORT, DEFAULT_PORT.toString())))
 				.useProtocol(
 					Protocol.valueOf(cmd.getOptionValue(OPTION_PROTOCOL, DEFAULT_PROTOCOL.toString()).toUpperCase()))
 				.user(cmd.getOptionValue(OPTION_USER, DEFAULT_USER))
 				.password(cmd.getOptionValue(OPTION_PW, DEFAULT_PW));
+
+		final String[] hosts = cmd.getOptionValue(OPTION_HOSTS, DEFAULT_HOSTS).split(",");
+		Stream.of(hosts).map(e -> e.split(":")).filter(e -> e.length == 2)
+				.forEach(e -> builder.host(e[0], Integer.valueOf(e[1])));
 		try {
 			final String caseString = cmd.getOptionValue(OPTION_CASE);
 			if (caseString == null) {
@@ -123,10 +124,9 @@ public class App {
 		options.addOption(OptionBuilder.withArgName(OPTION_CASE).hasArg()
 				.withDescription(String.format("Use-case (%s)", enumOptions(Case.values()))).isRequired()
 				.create(OPTION_CASE));
-		options.addOption(OptionBuilder.withArgName(OPTION_IP).hasArg()
-				.withDescription(String.format("Server address (default: %s)", DEFAULT_IP)).create(OPTION_IP));
-		options.addOption(OptionBuilder.withArgName(OPTION_PORT).hasArg()
-				.withDescription(String.format("Server port (default: %s)", DEFAULT_PORT)).create(OPTION_PORT));
+		options.addOption(OptionBuilder.withArgName(OPTION_HOSTS).hasArg()
+				.withDescription(String.format("comma separated host addresses (default: %s)", DEFAULT_HOSTS))
+				.create(OPTION_HOSTS));
 		options.addOption(OptionBuilder.withArgName(OPTION_USER).hasArg()
 				.withDescription(String.format("User (default: %s)", DEFAULT_USER)).create(OPTION_USER));
 		options.addOption(OptionBuilder.withArgName(OPTION_PW).hasArg()
