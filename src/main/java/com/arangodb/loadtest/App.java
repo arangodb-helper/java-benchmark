@@ -59,6 +59,7 @@ public class App {
 	private static final Integer DEFAULT_BATCH_SIZE = 1000;
 	private static final Integer DEFAULT_THREADS = 1;
 	private static final Integer DEFAULT_DOCUMENT_SIZE = 20;
+	private static final Integer DEFAULT_DOCUMENT_FIELD_SIZE = 30;
 	private static final Protocol DEFAULT_PROTOCOL = Protocol.VST;
 
 	private static final String OPTION_CASE = "case";
@@ -69,6 +70,7 @@ public class App {
 	private static final String OPTION_BATCH_SIZE = "batchSize";
 	private static final String OPTION_THREADS = "threads";
 	private static final String OPTION_DOCUMENT_SIZE = "docSize";
+	private static final String OPTION_DOCUMENT_FIELD_SIZE = "docFieldSize";
 	private static final String OPTION_PROTOCOL = "protocol";
 
 	public static void main(final String[] args) {
@@ -105,7 +107,9 @@ public class App {
 			} else if (caze == Case.WRITE) {
 				app.setup(builder);
 				final DocumentCreator documentCreator = new DocumentCreator(
-						Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())));
+						Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
+						Integer.valueOf(
+							cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())));
 				app.write(builder, documentCreator, batchSize, numThreads);
 			}
 		} catch (final InterruptedException e) {
@@ -137,6 +141,10 @@ public class App {
 		options.addOption(OptionBuilder.withArgName(OPTION_DOCUMENT_SIZE).hasArg()
 				.withDescription(String.format("Number of field in the documents (default: %s)", DEFAULT_DOCUMENT_SIZE))
 				.create(OPTION_DOCUMENT_SIZE));
+		options.addOption(OptionBuilder.withArgName(OPTION_DOCUMENT_FIELD_SIZE).hasArg()
+				.withDescription(
+					String.format("The field size in the documents (default: %s)", DEFAULT_DOCUMENT_FIELD_SIZE))
+				.create(OPTION_DOCUMENT_FIELD_SIZE));
 		options.addOption(OptionBuilder.withArgName(OPTION_PROTOCOL).hasArg().withDescription(
 			String.format("Network protocol (%s) (default: %s)", enumOptions(Protocol.values()), DEFAULT_PROTOCOL))
 				.create(OPTION_PROTOCOL));

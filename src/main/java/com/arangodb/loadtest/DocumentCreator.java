@@ -31,16 +31,18 @@ import com.arangodb.entity.BaseDocument;
 public class DocumentCreator {
 
 	private final int numberOfFields;
+	private final int fieldSize;
 
-	public DocumentCreator(final int numberOfFields) {
+	public DocumentCreator(final int numberOfFields, final int fieldSize) {
 		super();
 		this.numberOfFields = numberOfFields;
+		this.fieldSize = fieldSize;
 	}
 
 	public BaseDocument create(final String key) {
 		final BaseDocument doc = new BaseDocument(key);
 		for (int i = 0; i < numberOfFields; i++) {
-			doc.addAttribute("field" + i, RandomStringUtils.random(30, false, true));
+			doc.addAttribute("field" + i, RandomStringUtils.random(fieldSize, false, true));
 		}
 		return doc;
 	}
