@@ -64,6 +64,7 @@ public class App {
 	private static final Protocol DEFAULT_PROTOCOL = Protocol.VST;
 	private static final LoadBalancingStrategy DEFAULT_LOAD_BALANCING_STRATEGY = LoadBalancingStrategy.NONE;
 	private static final Boolean DEFAULT_DROP_DB = false;
+	private static final String DEFAULT_KEY_PREFIX = "";
 
 	private static final String OPTION_CASE = "case";
 	private static final String OPTION_HOSTS = "hosts";
@@ -76,6 +77,7 @@ public class App {
 	private static final String OPTION_PROTOCOL = "protocol";
 	private static final String OPTION_LOAD_BALANCING_STRATEGY = "loadBalancing";
 	private static final String OPTION_DROP_DB = "dropDB";
+	private static final String OPTION_KEY_PREFIX = "keyPrefix";
 
 	public static void main(final String[] args) {
 		final App app = new App();
@@ -117,7 +119,8 @@ public class App {
 				final DocumentCreator documentCreator = new DocumentCreator(
 						Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
 						Integer.valueOf(
-							cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())));
+							cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())),
+						cmd.getOptionValue(OPTION_KEY_PREFIX, DEFAULT_KEY_PREFIX));
 				app.write(builder, documentCreator, batchSize, numThreads);
 			}
 		} catch (final InterruptedException e) {
@@ -162,6 +165,11 @@ public class App {
 		options.addOption(OptionBuilder.withArgName(OPTION_DROP_DB).hasArg()
 				.withDescription(String.format("Drop DB before run (default: %s)", DEFAULT_DROP_DB))
 				.create(OPTION_DROP_DB));
+		options.addOption(
+			OptionBuilder.withArgName(OPTION_KEY_PREFIX).hasArg()
+					.withDescription(String.format(
+						"Document key prefix (when running on multiple clients) (default: %s)", DEFAULT_KEY_PREFIX))
+					.create(OPTION_KEY_PREFIX));
 		return options;
 	}
 

@@ -34,4 +34,5 @@ java -jar arangodb-load-test.jar -case read
 -batchSize <batchSize>           Number of documents processed in one batch (default: 1000)
 -docSize <docSize>               Number of field in the documents (default: 20)
 -docFieldSize <docFieldSize>     The field size in the documents (default: 30)
+-keyPrefix <keyPrefix>           Document key prefix (when running on multiple clients) (default: )
 ```
