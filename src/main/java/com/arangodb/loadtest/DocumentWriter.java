@@ -48,9 +48,11 @@ public class DocumentWriter {
 	private final ArangoDatabase db;
 	private final DocumentCreator documentCreator;
 	private int keySuffix = 0;
+	private final boolean log;
 
 	public DocumentWriter(final ArangoDB.Builder builder, final String databaseName, final String collectionName,
-		final DocumentCreator documentCreator, final int num) {
+		final DocumentCreator documentCreator, final int num, final boolean log) {
+		this.log = log;
 		arango = builder.build();
 		db = arango.db(databaseName);
 		this.collectionName = collectionName;
@@ -72,8 +74,10 @@ public class DocumentWriter {
 		} else {
 			db.collection(collectionName).insertDocuments(documents);
 		}
-		LOGGER.info(String.format("thread [%s] finished writing of %s documents in %s ms", id, documents.size(),
-			sw.getElapsedTime()));
+		if (log) {
+			LOGGER.info(String.format("thread [%s] finished writing of %s documents in %s ms", id, documents.size(),
+				sw.getElapsedTime()));
+		}
 	}
 
 }

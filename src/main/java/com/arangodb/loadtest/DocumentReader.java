@@ -47,9 +47,11 @@ public class DocumentReader {
 	private final String id;
 	private final ArangoDatabase db;
 	private int keySuffix = 0;
+	private final boolean log;
 
 	public DocumentReader(final ArangoDB.Builder builder, final String databaseName, final String collectionName,
-		final int num) {
+		final int num, final boolean log) {
+		this.log = log;
 		arango = builder.build();
 		db = arango.db(databaseName);
 		this.collectionName = collectionName;
@@ -69,8 +71,10 @@ public class DocumentReader {
 		} else {
 			db.collection(collectionName).getDocuments(keys, BaseDocument.class);
 		}
-		LOGGER.info(
-			String.format("thread [%s] finished reading of %s documents in %s ms", id, batchSize, sw.getElapsedTime()));
+		if (log) {
+			LOGGER.info(String.format("thread [%s] finished reading of %s documents in %s ms", id, batchSize,
+				sw.getElapsedTime()));
+		}
 	}
 
 }

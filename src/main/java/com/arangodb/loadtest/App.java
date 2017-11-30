@@ -65,6 +65,7 @@ public class App {
 	private static final LoadBalancingStrategy DEFAULT_LOAD_BALANCING_STRATEGY = LoadBalancingStrategy.NONE;
 	private static final Boolean DEFAULT_DROP_DB = false;
 	private static final String DEFAULT_KEY_PREFIX = "";
+	private static final Boolean DEFAULT_PRINT_REQUEST = false;
 
 	private static final String OPTION_CASE = "case";
 	private static final String OPTION_HOSTS = "hosts";
@@ -78,6 +79,7 @@ public class App {
 	private static final String OPTION_LOAD_BALANCING_STRATEGY = "loadBalancing";
 	private static final String OPTION_DROP_DB = "dropDB";
 	private static final String OPTION_KEY_PREFIX = "keyPrefix";
+	private static final String OPTION_PRINT_REQUEST = "printRequestTime";
 
 	public static void main(final String[] args) {
 		final App app = new App();
@@ -106,6 +108,8 @@ public class App {
 		Stream.of(hosts).map(e -> e.split(":")).filter(e -> e.length == 2)
 				.forEach(e -> builder.host(e[0], Integer.valueOf(e[1])));
 		try {
+			final boolean detailLog = Boolean
+					.valueOf(cmd.getOptionValue(OPTION_PRINT_REQUEST, DEFAULT_PRINT_REQUEST.toString()));
 			final String caseString = cmd.getOptionValue(OPTION_CASE);
 			if (caseString == null) {
 				new HelpFormatter().printHelp("java -jar arangodb-load-test.jar", options);
@@ -113,7 +117,7 @@ public class App {
 			}
 			final Case caze = Case.valueOf(caseString.toUpperCase());
 			if (caze == Case.READ) {
-				app.read(builder, batchSize, numThreads);
+				app.read(builder, batchSize, numThreads, detailLog);
 			} else if (caze == Case.WRITE) {
 				app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())));
 				final DocumentCreator documentCreator = new DocumentCreator(
@@ -121,7 +125,7 @@ public class App {
 						Integer.valueOf(
 							cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())),
 						cmd.getOptionValue(OPTION_KEY_PREFIX, DEFAULT_KEY_PREFIX));
-				app.write(builder, documentCreator, batchSize, numThreads);
+				app.write(builder, documentCreator, batchSize, numThreads, detailLog);
 			}
 		} catch (final InterruptedException e) {
 			LOGGER.error("Failed", e);
@@ -135,7 +139,7 @@ public class App {
 				.withDescription(String.format("Use-case (%s)", enumOptions(Case.values()))).isRequired()
 				.create(OPTION_CASE));
 		options.addOption(OptionBuilder.withArgName(OPTION_HOSTS).hasArg()
-				.withDescription(String.format("comma separated host addresses (default: %s)", DEFAULT_HOSTS))
+				.withDescription(String.format("Comma separated host addresses (default: %s)", DEFAULT_HOSTS))
 				.create(OPTION_HOSTS));
 		options.addOption(OptionBuilder.withArgName(OPTION_USER).hasArg()
 				.withDescription(String.format("User (default: %s)", DEFAULT_USER)).create(OPTION_USER));
@@ -170,6 +174,9 @@ public class App {
 					.withDescription(String.format(
 						"Document key prefix (when running on multiple clients) (default: %s)", DEFAULT_KEY_PREFIX))
 					.create(OPTION_KEY_PREFIX));
+		options.addOption(OptionBuilder.withArgName(OPTION_PRINT_REQUEST).hasArg()
+				.withDescription(String.format("Print time for every request (default: %s)", DEFAULT_PRINT_REQUEST))
+				.create(OPTION_PRINT_REQUEST));
 		return options;
 	}
 
@@ -201,12 +208,13 @@ public class App {
 		final ArangoDB.Builder builder,
 		final DocumentCreator documentCreator,
 		final int batchSize,
-		final int numThreads) throws InterruptedException {
+		final int numThreads,
+		final boolean detailLog) throws InterruptedException {
 		LOGGER.info(String.format("starting writes with %s threads", numThreads));
 
 		final WriterWorkerThread[] workers = new WriterWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize);
+			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize, detailLog);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
@@ -216,13 +224,16 @@ public class App {
 		}
 	}
 
-	private void read(final ArangoDB.Builder builder, final int batchSize, final int numThreads)
-			throws InterruptedException {
+	private void read(
+		final ArangoDB.Builder builder,
+		final int batchSize,
+		final int numThreads,
+		final boolean detailLog) throws InterruptedException {
 		LOGGER.info(String.format("starting reads with %s threads", numThreads));
 
 		final ReaderWorkerThread[] workers = new ReaderWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new ReaderWorkerThread(builder, i, batchSize);
+			workers[i] = new ReaderWorkerThread(builder, i, batchSize, detailLog);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
@@ -238,9 +249,9 @@ public class App {
 		private final int batchSize;
 
 		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator documentCreator, final int num,
-			final int batchSize) {
+			final int batchSize, final boolean log) {
 			super();
-			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num);
+			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num, log);
 			this.batchSize = batchSize;
 		}
 
@@ -262,9 +273,10 @@ public class App {
 		private final DocumentReader reader;
 		private final int batchSize;
 
-		public ReaderWorkerThread(final ArangoDB.Builder builder, final int num, final int batchSize) {
+		public ReaderWorkerThread(final ArangoDB.Builder builder, final int num, final int batchSize,
+			final boolean log) {
 			super();
-			this.reader = new DocumentReader(builder, DB_NAME, COLLECTION_NAME, num);
+			this.reader = new DocumentReader(builder, DB_NAME, COLLECTION_NAME, num, log);
 			this.batchSize = batchSize;
 		}
 
