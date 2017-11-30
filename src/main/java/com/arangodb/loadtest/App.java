@@ -63,6 +63,7 @@ public class App {
 	private static final Integer DEFAULT_DOCUMENT_FIELD_SIZE = 30;
 	private static final Protocol DEFAULT_PROTOCOL = Protocol.VST;
 	private static final LoadBalancingStrategy DEFAULT_LOAD_BALANCING_STRATEGY = LoadBalancingStrategy.NONE;
+	private static final Boolean DEFAULT_DROP_DB = false;
 
 	private static final String OPTION_CASE = "case";
 	private static final String OPTION_HOSTS = "hosts";
@@ -74,6 +75,7 @@ public class App {
 	private static final String OPTION_DOCUMENT_FIELD_SIZE = "docFieldSize";
 	private static final String OPTION_PROTOCOL = "protocol";
 	private static final String OPTION_LOAD_BALANCING_STRATEGY = "loadBalancing";
+	private static final String OPTION_DROP_DB = "dropDB";
 
 	public static void main(final String[] args) {
 		final App app = new App();
@@ -111,7 +113,7 @@ public class App {
 			if (caze == Case.READ) {
 				app.read(builder, batchSize, numThreads);
 			} else if (caze == Case.WRITE) {
-				app.setup(builder);
+				app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())));
 				final DocumentCreator documentCreator = new DocumentCreator(
 						Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
 						Integer.valueOf(
@@ -157,6 +159,9 @@ public class App {
 				.withDescription(String.format("Load balancing strategy (%s) (default: %s)",
 					enumOptions(LoadBalancingStrategy.values()), DEFAULT_LOAD_BALANCING_STRATEGY))
 				.create(OPTION_LOAD_BALANCING_STRATEGY));
+		options.addOption(OptionBuilder.withArgName(OPTION_DROP_DB).hasArg()
+				.withDescription(String.format("Drop DB before run (default: %s)", DEFAULT_DROP_DB))
+				.create(OPTION_DROP_DB));
 		return options;
 	}
 
@@ -164,11 +169,13 @@ public class App {
 		return Arrays.asList(values).stream().map(e -> e.name().toLowerCase()).reduce((a, b) -> a + "," + b).get();
 	}
 
-	private void setup(final Builder builder) {
+	private void setup(final Builder builder, final boolean dropDB) {
 		final ArangoDB arangoDB = builder.build();
-		try {
-			arangoDB.db(DB_NAME).drop();
-		} catch (final ArangoDBException e) {
+		if (dropDB) {
+			try {
+				arangoDB.db(DB_NAME).drop();
+			} catch (final ArangoDBException e) {
+			}
 		}
 		try {
 			arangoDB.createDatabase(DB_NAME);
