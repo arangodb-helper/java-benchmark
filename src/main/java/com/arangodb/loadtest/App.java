@@ -166,10 +166,11 @@ public class App {
 			app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())),
 				numberOfShards != null ? Integer.valueOf(numberOfShards) : null,
 				replicationFactor != null ? Integer.valueOf(replicationFactor) : null);
-			final DocumentCreator documentCreator = new DocumentCreator(
+			final DocumentCreator.Builder documentCreator = new DocumentCreator.Builder(
 					Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
 					Integer.valueOf(
-						cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())));
+						cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())),
+					batchSize);
 			app.write(builder, documentCreator, batchSize, numThreads, detailLog, keyPrefix, operations);
 		}
 	}
@@ -305,7 +306,7 @@ public class App {
 
 	private void write(
 		final ArangoDB.Builder builder,
-		final DocumentCreator documentCreator,
+		final DocumentCreator.Builder documentCreator,
 		final int batchSize,
 		final int numThreads,
 		final boolean detailLog,
@@ -357,14 +358,14 @@ public class App {
 		private final int batchSize;
 		private final Integer operations;
 
-		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator documentCreator, final int num,
-			final int batchSize, final boolean log, final Map<String, Collection<Long>> times, final String keyPrefix,
-			final Integer operations) {
+		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator.Builder documentCreator,
+			final int num, final int batchSize, final boolean log, final Map<String, Collection<Long>> times,
+			final String keyPrefix, final Integer operations) {
 			super();
 			this.operations = operations;
 			final ArrayList<Long> l = new ArrayList<>();
 			times.put("thread" + num, l);
-			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num, log, l,
+			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator.build(), num, log, l,
 					keyPrefix);
 			this.batchSize = batchSize;
 		}

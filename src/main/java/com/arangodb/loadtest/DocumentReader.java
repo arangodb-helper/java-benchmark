@@ -21,9 +21,7 @@
 package com.arangodb.loadtest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +66,6 @@ public class DocumentReader {
 		for (int i = 0; i < batchSize; i++) {
 			keys.add(keyPrefix + id + "-" + keySuffix++);
 		}
-		Collections.shuffle(keys, new Random(System.nanoTime()));
-
 		final Stopwatch sw = new Stopwatch();
 		if (batchSize == 1) {
 			final BaseDocument doc = db.collection(collectionName).getDocument(keys.get(0), BaseDocument.class);

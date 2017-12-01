@@ -20,6 +20,11 @@
 
 package com.arangodb.loadtest;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.commons.lang3.RandomStringUtils;
 
 import com.arangodb.entity.BaseDocument;
@@ -30,21 +35,42 @@ import com.arangodb.entity.BaseDocument;
  */
 public class DocumentCreator {
 
-	private final int numberOfFields;
-	private final int fieldSize;
+	public static class Builder {
 
-	public DocumentCreator(final int numberOfFields, final int fieldSize) {
-		super();
-		this.numberOfFields = numberOfFields;
-		this.fieldSize = fieldSize;
+		private final int numberOfFields;
+		private final int fieldSize;
+		private final int batchSize;
+
+		public Builder(final int numberOfFields, final int fieldSize, final int batchSize) {
+			super();
+			this.numberOfFields = numberOfFields;
+			this.fieldSize = fieldSize;
+			this.batchSize = batchSize;
+		}
+
+		public DocumentCreator build() {
+			return new DocumentCreator(numberOfFields, fieldSize, batchSize);
+		}
 	}
 
-	public BaseDocument create(final String key) {
-		final BaseDocument doc = new BaseDocument(key);
-		for (int i = 0; i < numberOfFields; i++) {
-			doc.addAttribute("field" + i, RandomStringUtils.random(fieldSize, false, true));
+	private final List<BaseDocument> cache;
+
+	private DocumentCreator(final int numberOfFields, final int fieldSize, final int batchSize) {
+		super();
+		cache = new ArrayList<>();
+		for (int j = 0; j < batchSize; j++) {
+			final BaseDocument doc = new BaseDocument();
+			for (int i = 0; i < numberOfFields; i++) {
+				doc.addAttribute("field" + i, RandomStringUtils.random(fieldSize, false, true));
+			}
+			cache.add(doc);
 		}
-		return doc;
+	}
+
+	public List<BaseDocument> create(final Collection<String> keys) {
+		final Iterator<String> iterator = keys.iterator();
+		cache.forEach(e -> e.setKey(iterator.next()));
+		return cache;
 	}
 
 }

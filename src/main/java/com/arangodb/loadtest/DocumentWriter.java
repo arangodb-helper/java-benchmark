@@ -65,11 +65,11 @@ public class DocumentWriter {
 	}
 
 	public void write(final int batchSize) throws ArangoDBException {
-		final List<BaseDocument> documents = new ArrayList<>(batchSize);
+		final List<String> keys = new ArrayList<>(batchSize);
 		for (int i = 0; i < batchSize; i++) {
-			final String key = keyPrefix + id + "-" + keySuffix++;
-			documents.add(documentCreator.create(key));
+			keys.add(keyPrefix + id + "-" + keySuffix++);
 		}
+		final List<BaseDocument> documents = documentCreator.create(keys);
 		final Stopwatch sw = new Stopwatch();
 		if (batchSize == 1) {
 			db.collection(collectionName).insertDocument(documents.get(0));
