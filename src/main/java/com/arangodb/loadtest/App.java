@@ -57,6 +57,7 @@ public class App {
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
+	private static final String USAGE_INFO = "java -jar arangodb-load-test.jar";
 	private static final String DB_NAME = "load_test_db";
 	private static final String COLLECTION_NAME = "load_test_collection";
 
@@ -99,7 +100,7 @@ public class App {
 			cmd = parser.parse(options, args);
 		} catch (final ParseException e) {
 			System.err.println(e);
-			new HelpFormatter().printHelp("java -jar arangodb-load-test.jar", options);
+			new HelpFormatter().printHelp(USAGE_INFO, options);
 			System.exit(1);
 			return;
 		}
@@ -127,7 +128,7 @@ public class App {
 					.valueOf(cmd.getOptionValue(OPTION_PRINT_REQUEST, DEFAULT_PRINT_REQUEST.toString()));
 			final String caseString = cmd.getOptionValue(OPTION_CASE);
 			if (caseString == null) {
-				new HelpFormatter().printHelp("java -jar arangodb-load-test.jar", options);
+				new HelpFormatter().printHelp(USAGE_INFO, options);
 				System.exit(1);
 			}
 			final String keyPrefix = cmd.getOptionValue(OPTION_KEY_PREFIX, DEFAULT_KEY_PREFIX);
