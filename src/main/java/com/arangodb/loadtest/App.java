@@ -295,7 +295,7 @@ public class App {
 				average = min = max = p50th = p95th = p99th = 0L;
 			}
 			LOGGER.info(String.format(
-				"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 50th: %s, 95th: %s ms, 99th: %s ms]",
+				"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 50th: %s ms, 95th: %s ms, 99th: %s ms]",
 				sleep / 1000, numThreads, type, numRequests, numRequests * batchSize, average, min, max, p50th, p95th,
 				p99th));
 			try {
