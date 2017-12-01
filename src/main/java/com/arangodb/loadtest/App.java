@@ -229,6 +229,34 @@ public class App {
 		}
 	}
 
+	private void collectData(
+		final int batchSize,
+		final int numThreads,
+		final Map<String, Collection<Long>> times,
+		final String type) {
+		final Stopwatch sw = new Stopwatch();
+		for (;;) {
+			final long elapsedTime = sw.getElapsedTime();
+			if (elapsedTime >= 10000) {
+				final List<Long> requests = new ArrayList<>();
+				times.values().forEach(requests::addAll);
+				times.values().forEach(Collection::clear);
+				Collections.sort(requests);
+				final int numRequests = requests.size();
+				final Long average = requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L);
+				final Long min = requests.get(0);
+				final Long max = requests.get(numRequests - 1);
+				final Long p95th = requests.get((int) ((numRequests * 0.95) - 1));
+				final Long p99th = requests.get((int) ((numRequests * 0.99) - 1));
+				LOGGER.info(String.format(
+					"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 95th: %s ms, 99th: %s ms]",
+					(int) (elapsedTime / 1000), numThreads, type, numRequests, numRequests * batchSize, average, min,
+					max, p95th, p99th));
+				sw.start();
+			}
+		}
+	}
+
 	private void write(
 		final ArangoDB.Builder builder,
 		final DocumentCreator documentCreator,
@@ -245,21 +273,7 @@ public class App {
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
 		}
-		final Stopwatch sw = new Stopwatch();
-		for (;;) {
-			final long elapsedTime = sw.getElapsedTime();
-			if (elapsedTime >= 10000) {
-				final List<Long> collect = new ArrayList<>();
-				times.values().forEach(collect::addAll);
-				times.values().forEach(Collection::clear);
-				Collections.sort(collect);
-				final int calls = collect.size();
-				LOGGER.info(
-					String.format("All %s threads perform %s write calls (%s documents) within the last %s seconds",
-						numThreads, calls, calls * batchSize, (int) (elapsedTime / 1000)));
-				sw.start();
-			}
-		}
+		collectData(batchSize, numThreads, times, "Write");
 	}
 
 	private void read(
@@ -269,16 +283,15 @@ public class App {
 		final boolean detailLog) throws InterruptedException {
 		LOGGER.info(String.format("starting reads with %s threads", numThreads));
 
+		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final ReaderWorkerThread[] workers = new ReaderWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new ReaderWorkerThread(builder, i, batchSize, detailLog);
+			workers[i] = new ReaderWorkerThread(builder, i, batchSize, detailLog, times);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
 		}
-		for (int i = 0; i < workers.length; i++) {
-			workers[i].join();
-		}
+		collectData(batchSize, numThreads, times, "Read");
 	}
 
 	class WriterWorkerThread extends Thread {
@@ -313,10 +326,12 @@ public class App {
 		private final DocumentReader reader;
 		private final int batchSize;
 
-		public ReaderWorkerThread(final ArangoDB.Builder builder, final int num, final int batchSize,
-			final boolean log) {
+		public ReaderWorkerThread(final ArangoDB.Builder builder, final int num, final int batchSize, final boolean log,
+			final Map<String, Collection<Long>> times) {
 			super();
-			this.reader = new DocumentReader(builder, DB_NAME, COLLECTION_NAME, num, log);
+			final ArrayList<Long> l = new ArrayList<>();
+			times.put("thread" + num, l);
+			this.reader = new DocumentReader(builder, DB_NAME, COLLECTION_NAME, num, log, l);
 			this.batchSize = batchSize;
 		}
 
