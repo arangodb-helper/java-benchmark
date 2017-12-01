@@ -22,9 +22,7 @@ package com.arangodb.loadtest;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +70,6 @@ public class DocumentWriter {
 			final String key = keyPrefix + id + "-" + keySuffix++;
 			documents.add(documentCreator.create(key));
 		}
-		Collections.shuffle(documents, new Random(System.nanoTime()));
-
 		final Stopwatch sw = new Stopwatch();
 		if (batchSize == 1) {
 			db.collection(collectionName).insertDocument(documents.get(0));
