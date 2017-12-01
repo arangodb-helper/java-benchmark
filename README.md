@@ -21,6 +21,12 @@ java -jar target/arangodb-load-test.jar -case write
 java -jar arangodb-load-test.jar -case read
 ```
 
+## usage different cases with number of operation per thread restriction
+
+```
+java -jar arangodb-load-test.jar -case write:10000,read:5000
+```
+
 ## additional options
 
 ```

@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.BasicParser;
@@ -131,20 +132,38 @@ public class App {
 				new HelpFormatter().printHelp(USAGE_INFO, options);
 				System.exit(1);
 			}
-			final String keyPrefix = cmd.getOptionValue(OPTION_KEY_PREFIX, DEFAULT_KEY_PREFIX);
-			final Case caze = Case.valueOf(caseString.toUpperCase());
-			if (caze == Case.READ) {
-				app.read(builder, batchSize, numThreads, detailLog, keyPrefix);
-			} else if (caze == Case.WRITE) {
-				app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())));
-				final DocumentCreator documentCreator = new DocumentCreator(
-						Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
-						Integer.valueOf(
-							cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())));
-				app.write(builder, documentCreator, batchSize, numThreads, detailLog, keyPrefix);
+
+			final List<String[]> cases = Stream.of(caseString.split(",")).map(e -> e.split(":"))
+					.collect(Collectors.toList());
+			for (final String[] caze : cases) {
+				final Integer operations = caze.length > 1 ? Integer.valueOf(caze[1]) : null;
+				run(app, cmd, batchSize, numThreads, builder, detailLog, Case.valueOf(caze[0].toUpperCase()),
+					operations);
 			}
 		} catch (final InterruptedException e) {
 			LOGGER.error("Failed", e);
+		}
+	}
+
+	private static void run(
+		final App app,
+		final CommandLine cmd,
+		final int batchSize,
+		final int numThreads,
+		final ArangoDB.Builder builder,
+		final boolean detailLog,
+		final Case caze,
+		final Integer operations) throws InterruptedException {
+		final String keyPrefix = cmd.getOptionValue(OPTION_KEY_PREFIX, DEFAULT_KEY_PREFIX);
+		if (caze == Case.READ) {
+			app.read(builder, batchSize, numThreads, detailLog, keyPrefix, operations);
+		} else if (caze == Case.WRITE) {
+			app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())));
+			final DocumentCreator documentCreator = new DocumentCreator(
+					Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
+					Integer.valueOf(
+						cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())));
+			app.write(builder, documentCreator, batchSize, numThreads, detailLog, keyPrefix, operations);
 		}
 	}
 
@@ -234,14 +253,17 @@ public class App {
 		final int batchSize,
 		final int numThreads,
 		final Map<String, Collection<Long>> times,
-		final String type) {
+		final String type,
+		final Integer operations) {
 		final Stopwatch sw = new Stopwatch();
-		for (;;) {
+		int currentOp = 0;
+		while (currentOp < operations) {
 			final long elapsedTime = sw.getElapsedTime();
 			if (elapsedTime >= 10000) {
 				final List<Long> requests = new ArrayList<>();
 				times.values().forEach(requests::addAll);
 				times.values().forEach(Collection::clear);
+				currentOp += requests.size();
 				Collections.sort(requests);
 				final int numRequests = requests.size();
 				final Long average, min, max, p95th, p99th;
@@ -269,18 +291,23 @@ public class App {
 		final int batchSize,
 		final int numThreads,
 		final boolean detailLog,
-		final String keyPrefix) throws InterruptedException {
+		final String keyPrefix,
+		final Integer operations) throws InterruptedException {
 		LOGGER.info(String.format("starting writes with %s threads", numThreads));
 
 		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final WriterWorkerThread[] workers = new WriterWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize, detailLog, times, keyPrefix);
+			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize, detailLog, times, keyPrefix,
+					operations);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
 		}
-		collectData(batchSize, numThreads, times, "Write");
+		collectData(batchSize, numThreads, times, "Write", operations);
+		for (int i = 0; i < workers.length; i++) {
+			workers[i].join();
+		}
 	}
 
 	private void read(
@@ -288,28 +315,35 @@ public class App {
 		final int batchSize,
 		final int numThreads,
 		final boolean detailLog,
-		final String keyPrefix) throws InterruptedException {
+		final String keyPrefix,
+		final Integer operations) throws InterruptedException {
 		LOGGER.info(String.format("starting reads with %s threads", numThreads));
 
 		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final ReaderWorkerThread[] workers = new ReaderWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new ReaderWorkerThread(builder, i, batchSize, detailLog, times, keyPrefix);
+			workers[i] = new ReaderWorkerThread(builder, i, batchSize, detailLog, times, keyPrefix, operations);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
 		}
-		collectData(batchSize, numThreads, times, "Read");
+		collectData(batchSize, numThreads, times, "Read", operations);
+		for (int i = 0; i < workers.length; i++) {
+			workers[i].join();
+		}
 	}
 
 	class WriterWorkerThread extends Thread {
 
 		private final DocumentWriter writer;
 		private final int batchSize;
+		private final Integer operations;
 
 		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator documentCreator, final int num,
-			final int batchSize, final boolean log, final Map<String, Collection<Long>> times, final String keyPrefix) {
+			final int batchSize, final boolean log, final Map<String, Collection<Long>> times, final String keyPrefix,
+			final Integer operations) {
 			super();
+			this.operations = operations;
 			final ArrayList<Long> l = new ArrayList<>();
 			times.put("thread" + num, l);
 			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num, log, l,
@@ -320,8 +354,14 @@ public class App {
 		@Override
 		public void run() {
 			try {
-				for (;;) {
-					writer.write(batchSize);
+				if (operations == null) {
+					for (;;) {
+						writer.write(batchSize);
+					}
+				} else {
+					for (int i = 0; i < operations; i++) {
+						writer.write(batchSize);
+					}
 				}
 			} catch (final Exception e) {
 				LOGGER.error("Failed to upload documents", e);
@@ -334,10 +374,12 @@ public class App {
 
 		private final DocumentReader reader;
 		private final int batchSize;
+		private final Integer operations;
 
 		public ReaderWorkerThread(final ArangoDB.Builder builder, final int num, final int batchSize, final boolean log,
-			final Map<String, Collection<Long>> times, final String keyPrefix) {
+			final Map<String, Collection<Long>> times, final String keyPrefix, final Integer operations) {
 			super();
+			this.operations = operations;
 			final ArrayList<Long> l = new ArrayList<>();
 			times.put("thread" + num, l);
 			this.reader = new DocumentReader(builder, DB_NAME, COLLECTION_NAME, num, log, l, keyPrefix);
@@ -347,8 +389,14 @@ public class App {
 		@Override
 		public void run() {
 			try {
-				for (;;) {
-					reader.read(batchSize);
+				if (operations == null) {
+					for (;;) {
+						reader.read(batchSize);
+					}
+				} else {
+					for (int i = 0; i < operations; i++) {
+						reader.read(batchSize);
+					}
 				}
 			} catch (final Exception e) {
 				LOGGER.error("Failed to download documents", e);
