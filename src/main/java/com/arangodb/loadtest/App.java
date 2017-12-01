@@ -257,7 +257,7 @@ public class App {
 		final Integer operations) {
 		final Stopwatch sw = new Stopwatch();
 		int currentOp = 0;
-		while (currentOp < operations) {
+		while (operations == null || currentOp < operations) {
 			final long elapsedTime = sw.getElapsedTime();
 			if (elapsedTime >= 10000) {
 				final List<Long> requests = new ArrayList<>();
