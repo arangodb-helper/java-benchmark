@@ -72,6 +72,7 @@ public class App {
 	private static final Boolean DEFAULT_DROP_DB = false;
 	private static final String DEFAULT_KEY_PREFIX = "";
 	private static final Boolean DEFAULT_PRINT_REQUEST = false;
+	private static final Boolean DEFAULT_ACQUIRE_HOST_LIST = false;
 
 	private static final String OPTION_CASE = "case";
 	private static final String OPTION_HOSTS = "hosts";
@@ -83,10 +84,11 @@ public class App {
 	private static final String OPTION_DOCUMENT_FIELD_SIZE = "docFieldSize";
 	private static final String OPTION_PROTOCOL = "protocol";
 	private static final String OPTION_LOAD_BALANCING_STRATEGY = "loadBalancing";
-	private static final String OPTIONS_MAX_CONNECTIONS = "connections";
+	private static final String OPTION_MAX_CONNECTIONS = "connections";
 	private static final String OPTION_DROP_DB = "dropDB";
 	private static final String OPTION_KEY_PREFIX = "keyPrefix";
 	private static final String OPTION_PRINT_REQUEST = "printRequestTime";
+	private static final String OPTION_ACQUIRE_HOST_LIST = "acquireHostList";
 
 	public static void main(final String[] args) {
 		final App app = new App();
@@ -109,8 +111,10 @@ public class App {
 				.user(cmd.getOptionValue(OPTION_USER, DEFAULT_USER)).password(cmd.getOptionValue(OPTION_PW, DEFAULT_PW))
 				.loadBalancingStrategy(LoadBalancingStrategy.valueOf(
 					cmd.getOptionValue(OPTION_LOAD_BALANCING_STRATEGY, DEFAULT_LOAD_BALANCING_STRATEGY.toString())
-							.toUpperCase()));
-		final String maxConnections = cmd.getOptionValue(OPTIONS_MAX_CONNECTIONS, null);
+							.toUpperCase()))
+				.acquireHostList(Boolean
+						.valueOf(cmd.getOptionValue(OPTION_ACQUIRE_HOST_LIST, DEFAULT_ACQUIRE_HOST_LIST.toString())));
+		final String maxConnections = cmd.getOptionValue(OPTION_MAX_CONNECTIONS, null);
 		if (maxConnections != null) {
 			builder.maxConnections(Integer.valueOf(maxConnections));
 		}
@@ -177,9 +181,12 @@ public class App {
 				.withDescription(String.format("Load balancing strategy (%s) (default: %s)",
 					enumOptions(LoadBalancingStrategy.values()), DEFAULT_LOAD_BALANCING_STRATEGY))
 				.create(OPTION_LOAD_BALANCING_STRATEGY));
-		options.addOption(OptionBuilder.withArgName(OPTIONS_MAX_CONNECTIONS).hasArg()
+		options.addOption(OptionBuilder.withArgName(OPTION_ACQUIRE_HOST_LIST).hasArg()
+				.withDescription(String.format("Acquire list of hosts (default %s)", DEFAULT_ACQUIRE_HOST_LIST))
+				.create(OPTION_ACQUIRE_HOST_LIST));
+		options.addOption(OptionBuilder.withArgName(OPTION_MAX_CONNECTIONS).hasArg()
 				.withDescription(String.format("Connections per thread (default for vst: 0, http: 20)"))
-				.create(OPTIONS_MAX_CONNECTIONS));
+				.create(OPTION_MAX_CONNECTIONS));
 		options.addOption(OptionBuilder.withArgName(OPTION_DROP_DB).hasArg()
 				.withDescription(String.format("Drop DB before run (default: %s)", DEFAULT_DROP_DB))
 				.create(OPTION_DROP_DB));
