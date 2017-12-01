@@ -47,14 +47,16 @@ public class DocumentReader {
 	private final String collectionName;
 	private final String id;
 	private final ArangoDatabase db;
+	private final String keyPrefix;
 	private int keySuffix = 0;
 	private final boolean log;
 	private final ArrayList<Long> times;
 
 	public DocumentReader(final ArangoDB.Builder builder, final String databaseName, final String collectionName,
-		final int num, final boolean log, final ArrayList<Long> times) {
+		final int num, final boolean log, final ArrayList<Long> times, final String keyPrefix) {
 		this.log = log;
 		this.times = times;
+		this.keyPrefix = keyPrefix;
 		arango = builder.build();
 		db = arango.db(databaseName);
 		this.collectionName = collectionName;
@@ -64,7 +66,7 @@ public class DocumentReader {
 	public void read(final int batchSize) throws ArangoDBException {
 		final List<String> keys = new ArrayList<>(batchSize);
 		for (int i = 0; i < batchSize; i++) {
-			keys.add(id + "-" + keySuffix++);
+			keys.add(keyPrefix + id + "-" + keySuffix++);
 		}
 		Collections.shuffle(keys, new Random(System.nanoTime()));
 

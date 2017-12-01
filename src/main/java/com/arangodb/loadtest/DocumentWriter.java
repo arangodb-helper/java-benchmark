@@ -48,14 +48,17 @@ public class DocumentWriter {
 	private final String id;
 	private final ArangoDatabase db;
 	private final DocumentCreator documentCreator;
+	private final String keyPrefix;
 	private int keySuffix = 0;
 	private final boolean log;
 	private final Collection<Long> times;
 
 	public DocumentWriter(final ArangoDB.Builder builder, final String databaseName, final String collectionName,
-		final DocumentCreator documentCreator, final int num, final boolean log, final Collection<Long> times) {
+		final DocumentCreator documentCreator, final int num, final boolean log, final Collection<Long> times,
+		final String keyPrefix) {
 		this.log = log;
 		this.times = times;
+		this.keyPrefix = keyPrefix;
 		arango = builder.build();
 		db = arango.db(databaseName);
 		this.collectionName = collectionName;
@@ -66,7 +69,7 @@ public class DocumentWriter {
 	public void write(final int batchSize) throws ArangoDBException {
 		final List<BaseDocument> documents = new ArrayList<>(batchSize);
 		for (int i = 0; i < batchSize; i++) {
-			final String key = id + "-" + keySuffix++;
+			final String key = keyPrefix + id + "-" + keySuffix++;
 			documents.add(documentCreator.create(key));
 		}
 		Collections.shuffle(documents, new Random(System.nanoTime()));

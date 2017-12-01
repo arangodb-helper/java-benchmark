@@ -32,17 +32,15 @@ public class DocumentCreator {
 
 	private final int numberOfFields;
 	private final int fieldSize;
-	private final String keyPrefix;
 
-	public DocumentCreator(final int numberOfFields, final int fieldSize, final String keyPrefix) {
+	public DocumentCreator(final int numberOfFields, final int fieldSize) {
 		super();
 		this.numberOfFields = numberOfFields;
 		this.fieldSize = fieldSize;
-		this.keyPrefix = keyPrefix;
 	}
 
 	public BaseDocument create(final String key) {
-		final BaseDocument doc = new BaseDocument(keyPrefix + key);
+		final BaseDocument doc = new BaseDocument(key);
 		for (int i = 0; i < numberOfFields; i++) {
 			doc.addAttribute("field" + i, RandomStringUtils.random(fieldSize, false, true));
 		}

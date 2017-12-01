@@ -130,17 +130,17 @@ public class App {
 				new HelpFormatter().printHelp("java -jar arangodb-load-test.jar", options);
 				System.exit(1);
 			}
+			final String keyPrefix = cmd.getOptionValue(OPTION_KEY_PREFIX, DEFAULT_KEY_PREFIX);
 			final Case caze = Case.valueOf(caseString.toUpperCase());
 			if (caze == Case.READ) {
-				app.read(builder, batchSize, numThreads, detailLog);
+				app.read(builder, batchSize, numThreads, detailLog, keyPrefix);
 			} else if (caze == Case.WRITE) {
 				app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())));
 				final DocumentCreator documentCreator = new DocumentCreator(
 						Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
 						Integer.valueOf(
-							cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())),
-						cmd.getOptionValue(OPTION_KEY_PREFIX, DEFAULT_KEY_PREFIX));
-				app.write(builder, documentCreator, batchSize, numThreads, detailLog);
+							cmd.getOptionValue(OPTION_DOCUMENT_FIELD_SIZE, DEFAULT_DOCUMENT_FIELD_SIZE.toString())));
+				app.write(builder, documentCreator, batchSize, numThreads, detailLog, keyPrefix);
 			}
 		} catch (final InterruptedException e) {
 			LOGGER.error("Failed", e);
@@ -267,13 +267,14 @@ public class App {
 		final DocumentCreator documentCreator,
 		final int batchSize,
 		final int numThreads,
-		final boolean detailLog) throws InterruptedException {
+		final boolean detailLog,
+		final String keyPrefix) throws InterruptedException {
 		LOGGER.info(String.format("starting writes with %s threads", numThreads));
 
 		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final WriterWorkerThread[] workers = new WriterWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize, detailLog, times);
+			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize, detailLog, times, keyPrefix);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
@@ -285,13 +286,14 @@ public class App {
 		final ArangoDB.Builder builder,
 		final int batchSize,
 		final int numThreads,
-		final boolean detailLog) throws InterruptedException {
+		final boolean detailLog,
+		final String keyPrefix) throws InterruptedException {
 		LOGGER.info(String.format("starting reads with %s threads", numThreads));
 
 		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final ReaderWorkerThread[] workers = new ReaderWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new ReaderWorkerThread(builder, i, batchSize, detailLog, times);
+			workers[i] = new ReaderWorkerThread(builder, i, batchSize, detailLog, times, keyPrefix);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
@@ -305,11 +307,12 @@ public class App {
 		private final int batchSize;
 
 		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator documentCreator, final int num,
-			final int batchSize, final boolean log, final Map<String, Collection<Long>> times) {
+			final int batchSize, final boolean log, final Map<String, Collection<Long>> times, final String keyPrefix) {
 			super();
 			final ArrayList<Long> l = new ArrayList<>();
 			times.put("thread" + num, l);
-			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num, log, l);
+			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num, log, l,
+					keyPrefix);
 			this.batchSize = batchSize;
 		}
 
@@ -332,11 +335,11 @@ public class App {
 		private final int batchSize;
 
 		public ReaderWorkerThread(final ArangoDB.Builder builder, final int num, final int batchSize, final boolean log,
-			final Map<String, Collection<Long>> times) {
+			final Map<String, Collection<Long>> times, final String keyPrefix) {
 			super();
 			final ArrayList<Long> l = new ArrayList<>();
 			times.put("thread" + num, l);
-			this.reader = new DocumentReader(builder, DB_NAME, COLLECTION_NAME, num, log, l);
+			this.reader = new DocumentReader(builder, DB_NAME, COLLECTION_NAME, num, log, l, keyPrefix);
 			this.batchSize = batchSize;
 		}
 
