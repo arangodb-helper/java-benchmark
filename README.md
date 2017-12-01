@@ -39,6 +39,7 @@ java -jar arangodb-load-test.jar -case write:10000,read:5000
 -connections <connections>             Connections per thread (default for vst: 0, http: 20)
 -acquireHostList <acquireHostList>     Acquire list of hosts (default false)
 -dropDB <dropDB>                       Drop DB before run (default: false)
+-numberOfShards <numberOfShards>       Collection number of shards (default: 1)
 -batchSize <batchSize>                 Number of documents processed in one batch (default: 1000)
 -docSize <docSize>                     Number of field in the documents (default: 20)
 -docFieldSize <docFieldSize>           The field size in the documents (default: 30)

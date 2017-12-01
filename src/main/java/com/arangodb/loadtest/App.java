@@ -45,6 +45,7 @@ import com.arangodb.ArangoDB.Builder;
 import com.arangodb.ArangoDBException;
 import com.arangodb.Protocol;
 import com.arangodb.entity.LoadBalancingStrategy;
+import com.arangodb.model.CollectionCreateOptions;
 
 /**
  * 
@@ -88,6 +89,7 @@ public class App {
 	private static final String OPTION_LOAD_BALANCING_STRATEGY = "loadBalancing";
 	private static final String OPTION_MAX_CONNECTIONS = "connections";
 	private static final String OPTION_DROP_DB = "dropDB";
+	private static final String OPTION_NUMBER_OF_SHARDS = "numberOfShards";
 	private static final String OPTION_KEY_PREFIX = "keyPrefix";
 	private static final String OPTION_PRINT_REQUEST = "printRequestTime";
 	private static final String OPTION_ACQUIRE_HOST_LIST = "acquireHostList";
@@ -158,7 +160,9 @@ public class App {
 		if (caze == Case.READ) {
 			app.read(builder, batchSize, numThreads, detailLog, keyPrefix, operations);
 		} else if (caze == Case.WRITE) {
-			app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())));
+			final String numberOfShards = cmd.getOptionValue(OPTION_NUMBER_OF_SHARDS);
+			app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())),
+				numberOfShards != null ? Integer.valueOf(numberOfShards) : null);
 			final DocumentCreator documentCreator = new DocumentCreator(
 					Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
 					Integer.valueOf(
@@ -205,11 +209,14 @@ public class App {
 				.withDescription(String.format("Acquire list of hosts (default %s)", DEFAULT_ACQUIRE_HOST_LIST))
 				.create(OPTION_ACQUIRE_HOST_LIST));
 		options.addOption(OptionBuilder.withArgName(OPTION_MAX_CONNECTIONS).hasArg()
-				.withDescription(String.format("Connections per thread (default for vst: 0, http: 20)"))
+				.withDescription(String.format("Connections per thread (default for vst: 1, http: 20)"))
 				.create(OPTION_MAX_CONNECTIONS));
 		options.addOption(OptionBuilder.withArgName(OPTION_DROP_DB).hasArg()
 				.withDescription(String.format("Drop DB before run (default: %s)", DEFAULT_DROP_DB))
 				.create(OPTION_DROP_DB));
+		options.addOption(OptionBuilder.withArgName(OPTION_NUMBER_OF_SHARDS).hasArg()
+				.withDescription(String.format("Collection number of shards (default: 1)"))
+				.create(OPTION_NUMBER_OF_SHARDS));
 		options.addOption(
 			OptionBuilder.withArgName(OPTION_KEY_PREFIX).hasArg()
 					.withDescription(String.format(
@@ -225,7 +232,7 @@ public class App {
 		return Arrays.asList(values).stream().map(e -> e.name().toLowerCase()).reduce((a, b) -> a + "," + b).get();
 	}
 
-	private void setup(final Builder builder, final boolean dropDB) {
+	private void setup(final Builder builder, final boolean dropDB, final Integer numberOfShards) {
 		final ArangoDB arangoDB = builder.build();
 		if (dropDB) {
 			try {
@@ -241,7 +248,8 @@ public class App {
 			}
 		}
 		try {
-			arangoDB.db(DB_NAME).createCollection(COLLECTION_NAME);
+			arangoDB.db(DB_NAME).createCollection(COLLECTION_NAME,
+				new CollectionCreateOptions().numberOfShards(numberOfShards));
 		} catch (final Exception e) {
 			if (!arangoDB.db(DB_NAME).collection(COLLECTION_NAME).exists()) {
 				LOGGER.error(String.format("Failed to create collection %s", COLLECTION_NAME));
