@@ -90,6 +90,7 @@ public class App {
 	private static final String OPTION_MAX_CONNECTIONS = "connections";
 	private static final String OPTION_DROP_DB = "dropDB";
 	private static final String OPTION_NUMBER_OF_SHARDS = "numberOfShards";
+	private static final String OPTION_REPLICATION_FACTOR = "replicationFactor";
 	private static final String OPTION_KEY_PREFIX = "keyPrefix";
 	private static final String OPTION_PRINT_REQUEST = "printRequestTime";
 	private static final String OPTION_ACQUIRE_HOST_LIST = "acquireHostList";
@@ -161,8 +162,10 @@ public class App {
 			app.read(builder, batchSize, numThreads, detailLog, keyPrefix, operations);
 		} else if (caze == Case.WRITE) {
 			final String numberOfShards = cmd.getOptionValue(OPTION_NUMBER_OF_SHARDS);
+			final String replicationFactor = cmd.getOptionValue(OPTION_REPLICATION_FACTOR);
 			app.setup(builder, Boolean.valueOf(cmd.getOptionValue(OPTION_DROP_DB, DEFAULT_DROP_DB.toString())),
-				numberOfShards != null ? Integer.valueOf(numberOfShards) : null);
+				numberOfShards != null ? Integer.valueOf(numberOfShards) : null,
+				replicationFactor != null ? Integer.valueOf(replicationFactor) : null);
 			final DocumentCreator documentCreator = new DocumentCreator(
 					Integer.valueOf(cmd.getOptionValue(OPTION_DOCUMENT_SIZE, DEFAULT_DOCUMENT_SIZE.toString())),
 					Integer.valueOf(
@@ -217,6 +220,9 @@ public class App {
 		options.addOption(OptionBuilder.withArgName(OPTION_NUMBER_OF_SHARDS).hasArg()
 				.withDescription(String.format("Collection number of shards (default: 1)"))
 				.create(OPTION_NUMBER_OF_SHARDS));
+		options.addOption(OptionBuilder.withArgName(OPTION_REPLICATION_FACTOR).hasArg()
+				.withDescription(String.format("Collection replication factor (default: 1)"))
+				.create(OPTION_REPLICATION_FACTOR));
 		options.addOption(
 			OptionBuilder.withArgName(OPTION_KEY_PREFIX).hasArg()
 					.withDescription(String.format(
@@ -232,7 +238,11 @@ public class App {
 		return Arrays.asList(values).stream().map(e -> e.name().toLowerCase()).reduce((a, b) -> a + "," + b).get();
 	}
 
-	private void setup(final Builder builder, final boolean dropDB, final Integer numberOfShards) {
+	private void setup(
+		final Builder builder,
+		final boolean dropDB,
+		final Integer numberOfShards,
+		final Integer replicationFactor) {
 		final ArangoDB arangoDB = builder.build();
 		if (dropDB) {
 			try {
@@ -249,7 +259,7 @@ public class App {
 		}
 		try {
 			arangoDB.db(DB_NAME).createCollection(COLLECTION_NAME,
-				new CollectionCreateOptions().numberOfShards(numberOfShards));
+				new CollectionCreateOptions().numberOfShards(numberOfShards).replicationFactor(replicationFactor));
 		} catch (final Exception e) {
 			if (!arangoDB.db(DB_NAME).collection(COLLECTION_NAME).exists()) {
 				LOGGER.error(String.format("Failed to create collection %s", COLLECTION_NAME));
