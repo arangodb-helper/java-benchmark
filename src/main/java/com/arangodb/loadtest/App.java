@@ -20,7 +20,13 @@
 
 package com.arangodb.loadtest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.BasicParser;
@@ -77,6 +83,7 @@ public class App {
 	private static final String OPTION_DOCUMENT_FIELD_SIZE = "docFieldSize";
 	private static final String OPTION_PROTOCOL = "protocol";
 	private static final String OPTION_LOAD_BALANCING_STRATEGY = "loadBalancing";
+	private static final String OPTIONS_MAX_CONNECTIONS = "connections";
 	private static final String OPTION_DROP_DB = "dropDB";
 	private static final String OPTION_KEY_PREFIX = "keyPrefix";
 	private static final String OPTION_PRINT_REQUEST = "printRequestTime";
@@ -103,6 +110,10 @@ public class App {
 				.loadBalancingStrategy(LoadBalancingStrategy.valueOf(
 					cmd.getOptionValue(OPTION_LOAD_BALANCING_STRATEGY, DEFAULT_LOAD_BALANCING_STRATEGY.toString())
 							.toUpperCase()));
+		final String maxConnections = cmd.getOptionValue(OPTIONS_MAX_CONNECTIONS, null);
+		if (maxConnections != null) {
+			builder.maxConnections(Integer.valueOf(maxConnections));
+		}
 
 		final String[] hosts = cmd.getOptionValue(OPTION_HOSTS, DEFAULT_HOSTS).split(",");
 		Stream.of(hosts).map(e -> e.split(":")).filter(e -> e.length == 2)
@@ -166,6 +177,9 @@ public class App {
 				.withDescription(String.format("Load balancing strategy (%s) (default: %s)",
 					enumOptions(LoadBalancingStrategy.values()), DEFAULT_LOAD_BALANCING_STRATEGY))
 				.create(OPTION_LOAD_BALANCING_STRATEGY));
+		options.addOption(OptionBuilder.withArgName(OPTIONS_MAX_CONNECTIONS).hasArg()
+				.withDescription(String.format("Connections per thread (default for vst: 0, http: 20)"))
+				.create(OPTIONS_MAX_CONNECTIONS));
 		options.addOption(OptionBuilder.withArgName(OPTION_DROP_DB).hasArg()
 				.withDescription(String.format("Drop DB before run (default: %s)", DEFAULT_DROP_DB))
 				.create(OPTION_DROP_DB));
@@ -195,12 +209,16 @@ public class App {
 		try {
 			arangoDB.createDatabase(DB_NAME);
 		} catch (final ArangoDBException e) {
-			LOGGER.error(String.format("Failed to create database: %s", DB_NAME));
+			if (!arangoDB.db(DB_NAME).exists()) {
+				LOGGER.error(String.format("Failed to create database: %s", DB_NAME));
+			}
 		}
 		try {
 			arangoDB.db(DB_NAME).createCollection(COLLECTION_NAME);
 		} catch (final Exception e) {
-			LOGGER.error(String.format("Failed to create collection %s", COLLECTION_NAME));
+			if (!arangoDB.db(DB_NAME).collection(COLLECTION_NAME).exists()) {
+				LOGGER.error(String.format("Failed to create collection %s", COLLECTION_NAME));
+			}
 		}
 	}
 
@@ -212,15 +230,28 @@ public class App {
 		final boolean detailLog) throws InterruptedException {
 		LOGGER.info(String.format("starting writes with %s threads", numThreads));
 
+		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final WriterWorkerThread[] workers = new WriterWorkerThread[numThreads];
 		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize, detailLog);
+			workers[i] = new WriterWorkerThread(builder, documentCreator, i, batchSize, detailLog, times);
 		}
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
 		}
-		for (int i = 0; i < workers.length; i++) {
-			workers[i].join();
+		final Stopwatch sw = new Stopwatch();
+		for (;;) {
+			final long elapsedTime = sw.getElapsedTime();
+			if (elapsedTime >= 10000) {
+				final List<Long> collect = new ArrayList<>();
+				times.values().forEach(collect::addAll);
+				times.values().forEach(Collection::clear);
+				Collections.sort(collect);
+				final int calls = collect.size();
+				LOGGER.info(
+					String.format("All %s threads perform %s write calls (%s documents) within the last %s seconds",
+						numThreads, calls, calls * batchSize, (int) (elapsedTime / 1000)));
+				sw.start();
+			}
 		}
 	}
 
@@ -249,9 +280,11 @@ public class App {
 		private final int batchSize;
 
 		public WriterWorkerThread(final ArangoDB.Builder builder, final DocumentCreator documentCreator, final int num,
-			final int batchSize, final boolean log) {
+			final int batchSize, final boolean log, final Map<String, Collection<Long>> times) {
 			super();
-			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num, log);
+			final ArrayList<Long> l = new ArrayList<>();
+			times.put("thread" + num, l);
+			this.writer = new DocumentWriter(builder, DB_NAME, COLLECTION_NAME, documentCreator, num, log, l);
 			this.batchSize = batchSize;
 		}
 

@@ -21,6 +21,7 @@
 package com.arangodb.loadtest;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -49,10 +50,12 @@ public class DocumentWriter {
 	private final DocumentCreator documentCreator;
 	private int keySuffix = 0;
 	private final boolean log;
+	private final Collection<Long> times;
 
 	public DocumentWriter(final ArangoDB.Builder builder, final String databaseName, final String collectionName,
-		final DocumentCreator documentCreator, final int num, final boolean log) {
+		final DocumentCreator documentCreator, final int num, final boolean log, final Collection<Long> times) {
 		this.log = log;
+		this.times = times;
 		arango = builder.build();
 		db = arango.db(databaseName);
 		this.collectionName = collectionName;
@@ -74,9 +77,11 @@ public class DocumentWriter {
 		} else {
 			db.collection(collectionName).insertDocuments(documents);
 		}
+		final long elapsedTime = sw.getElapsedTime();
+		times.add(elapsedTime);
 		if (log) {
 			LOGGER.info(String.format("thread [%s] finished writing of %s documents in %s ms", id, documents.size(),
-				sw.getElapsedTime()));
+				elapsedTime));
 		}
 	}
 

@@ -32,6 +32,7 @@ java -jar arangodb-load-test.jar -case read
 -loadBalancing <loadBalancing>         Load balancing strategy (none,round_robin,one_random) (default: NONE)
 -dropDB <dropDB>                       Drop DB before run (default: false)
 -batchSize <batchSize>                 Number of documents processed in one batch (default: 1000)
+-connections <connections>             Connections per thread (default for vst: 0, http: 20)
 -docSize <docSize>                     Number of field in the documents (default: 20)
 -docFieldSize <docFieldSize>           The field size in the documents (default: 30)
 -keyPrefix <keyPrefix>                 Document key prefix (when running on multiple clients) (default: )
