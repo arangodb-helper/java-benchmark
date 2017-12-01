@@ -243,11 +243,16 @@ public class App {
 				times.values().forEach(Collection::clear);
 				Collections.sort(requests);
 				final int numRequests = requests.size();
-				final Long average = requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L);
-				final Long min = requests.get(0);
-				final Long max = requests.get(numRequests - 1);
-				final Long p95th = requests.get((int) ((numRequests * 0.95) - 1));
-				final Long p99th = requests.get((int) ((numRequests * 0.99) - 1));
+				final Long average, min, max, p95th, p99th;
+				if (numRequests > 0) {
+					average = requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L);
+					min = requests.get(0);
+					max = requests.get(numRequests - 1);
+					p95th = requests.get((int) ((numRequests * 0.95) - 1));
+					p99th = requests.get((int) ((numRequests * 0.99) - 1));
+				} else {
+					average = min = max = p95th = p99th = 0L;
+				}
 				LOGGER.info(String.format(
 					"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 95th: %s ms, 99th: %s ms]",
 					(int) (elapsedTime / 1000), numThreads, type, numRequests, numRequests * batchSize, average, min,
