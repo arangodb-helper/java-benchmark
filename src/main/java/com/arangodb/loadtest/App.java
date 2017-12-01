@@ -274,33 +274,32 @@ public class App {
 		final Map<String, Collection<Long>> times,
 		final String type,
 		final Integer operations) {
-		final Stopwatch sw = new Stopwatch();
 		int currentOp = 0;
+		final int sleep = 10000;
 		while (operations == null || currentOp < operations) {
-			final long elapsedTime = sw.getElapsedTime();
-			if (elapsedTime >= 10000) {
-				final List<Long> requests = new ArrayList<>();
-				times.values().forEach(requests::addAll);
-				times.values().forEach(Collection::clear);
-				currentOp += requests.size();
-				Collections.sort(requests);
-				final int numRequests = requests.size();
-				final Long average, min, max, p95th, p99th;
-				if (numRequests > 0) {
-					average = requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L);
-					min = requests.get(0);
-					max = requests.get(numRequests - 1);
-					p95th = requests.get((int) ((numRequests * 0.95) - 1));
-					p99th = requests.get((int) ((numRequests * 0.99) - 1));
-				} else {
-					average = min = max = p95th = p99th = 0L;
-				}
-				LOGGER.info(String.format(
-					"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 95th: %s ms, 99th: %s ms]",
-					(int) (elapsedTime / 1000), numThreads, type, numRequests, numRequests * batchSize, average, min,
-					max, p95th, p99th));
-				sw.start();
+			final List<Long> requests = new ArrayList<>();
+			times.values().forEach(requests::addAll);
+			times.values().forEach(Collection::clear);
+			currentOp += requests.size();
+			Collections.sort(requests);
+			final int numRequests = requests.size();
+			final Long average, min, max, p95th, p99th;
+			if (numRequests > 0) {
+				average = requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L);
+				min = requests.get(0);
+				max = requests.get(numRequests - 1);
+				p95th = requests.get((int) ((numRequests * 0.95) - 1));
+				p99th = requests.get((int) ((numRequests * 0.99) - 1));
+			} else {
+				average = min = max = p95th = p99th = 0L;
 			}
+			LOGGER.info(String.format(
+				"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 95th: %s ms, 99th: %s ms]",
+				sleep / 1000, numThreads, type, numRequests, numRequests * batchSize, average, min, max, p95th, p99th));
+		}
+		try {
+			Thread.sleep(sleep);
+		} catch (final InterruptedException e) {
 		}
 	}
 
