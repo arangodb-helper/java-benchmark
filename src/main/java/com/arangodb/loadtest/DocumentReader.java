@@ -32,6 +32,7 @@ import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDBException;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.MultiDocumentEntity;
 
 /**
  * 
@@ -48,10 +49,12 @@ public class DocumentReader {
 	private final ArangoDatabase db;
 	private int keySuffix = 0;
 	private final boolean log;
+	private final ArrayList<Long> times;
 
 	public DocumentReader(final ArangoDB.Builder builder, final String databaseName, final String collectionName,
-		final int num, final boolean log) {
+		final int num, final boolean log, final ArrayList<Long> times) {
 		this.log = log;
+		this.times = times;
 		arango = builder.build();
 		db = arango.db(databaseName);
 		this.collectionName = collectionName;
@@ -67,13 +70,24 @@ public class DocumentReader {
 
 		final Stopwatch sw = new Stopwatch();
 		if (batchSize == 1) {
-			db.collection(collectionName).getDocument(keys.get(0), BaseDocument.class);
+			final BaseDocument doc = db.collection(collectionName).getDocument(keys.get(0), BaseDocument.class);
+			if (doc == null) {
+				throw new ArangoDBException(String.format("Failed to read document with key: %s", keys.get(0)));
+			}
 		} else {
-			db.collection(collectionName).getDocuments(keys, BaseDocument.class);
+			final MultiDocumentEntity<BaseDocument> documents = db.collection(collectionName).getDocuments(keys,
+				BaseDocument.class);
+			final int numDocs = documents.getDocuments().size();
+			if (numDocs != batchSize) {
+				throw new ArangoDBException(String.format("Failed to read all documents. %s / %s documents successful",
+					numDocs, batchSize));
+			}
 		}
+		final long elapsedTime = sw.getElapsedTime();
+		times.add(elapsedTime);
 		if (log) {
-			LOGGER.info(String.format("thread [%s] finished reading of %s documents in %s ms", id, batchSize,
-				sw.getElapsedTime()));
+			LOGGER.info(
+				String.format("thread [%s] finished reading of %s documents in %s ms", id, batchSize, elapsedTime));
 		}
 	}
 
