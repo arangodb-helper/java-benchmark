@@ -298,10 +298,10 @@ public class App {
 				"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 50th: %s, 95th: %s ms, 99th: %s ms]",
 				sleep / 1000, numThreads, type, numRequests, numRequests * batchSize, average, min, max, p50th, p95th,
 				p99th));
-		}
-		try {
-			Thread.sleep(sleep);
-		} catch (final InterruptedException e) {
+			try {
+				Thread.sleep(sleep);
+			} catch (final InterruptedException e) {
+			}
 		}
 	}
 
