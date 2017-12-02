@@ -30,14 +30,14 @@ public class Stopwatch {
 	private long startTime = 0;
 
 	public Stopwatch() {
-		startTime = System.currentTimeMillis();
+		startTime = System.nanoTime();
 	}
 
 	public void start() {
-		startTime = System.currentTimeMillis();
+		startTime = System.nanoTime();
 	}
 
 	public long getElapsedTime() {
-		return System.currentTimeMillis() - startTime;
+		return System.nanoTime() - startTime;
 	}
 }

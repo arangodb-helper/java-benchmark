@@ -205,21 +205,27 @@ public class App {
 			currentOp += requests.size();
 			Collections.sort(requests);
 			final int numRequests = requests.size();
-			final Long average, min, max, p50th, p95th, p99th;
+			final Double average, min, max, p50th, p95th, p99th;
 			if (numRequests > 0) {
-				average = requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L);
-				min = requests.get(0);
-				max = requests.get(numRequests - 1);
-				p50th = requests.get((int) ((numRequests * 0.5) - 1));
-				p95th = requests.get((int) ((numRequests * 0.95) - 1));
-				p99th = requests.get((int) ((numRequests * 0.99) - 1));
+				average = toMs(requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L));
+				min = toMs(requests.get(0));
+				max = toMs(requests.get(numRequests - 1));
+				p50th = toMs(requests.get((int) ((numRequests * 0.5) - 1)));
+				p95th = toMs(requests.get((int) ((numRequests * 0.95) - 1)));
+				p99th = toMs(requests.get((int) ((numRequests * 0.99) - 1)));
 			} else {
-				average = min = max = p50th = p95th = p99th = 0L;
+				average = min = max = p50th = p95th = p99th = 0.;
 			}
 			final Number[] d = new Number[] { sleep / 1000, numThreads, numRequests, numRequests * batchSize, average,
 					min, max, p50th, p95th, p99th };
 			out.println(Stream.of(d).map(n -> n.toString()).reduce((a, b) -> a + ", " + b).get());
 		}
+	}
+
+	private static Double toMs(final Long nanoSec) {
+		final Double microSec = (double) (nanoSec / 1000);
+		final Double milliSec = microSec / 1000;
+		return milliSec;
 	}
 
 }
