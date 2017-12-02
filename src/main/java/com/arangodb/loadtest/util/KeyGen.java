@@ -45,7 +45,13 @@ public class KeyGen {
 	public List<String> generateKeys(final int quantity) {
 		final List<String> keys = new ArrayList<>(quantity);
 		for (int i = 0; i < quantity; i++) {
-			keys.add(String.format("%s-%s-%s", (keyPrefix != null ? keyPrefix : ""), num, index++));
+			final String key;
+			if (keyPrefix != null) {
+				key = String.format("%s-%s-%s", keyPrefix, num, index++);
+			} else {
+				key = String.format("%s-%s", num, index++);
+			}
+			keys.add(key);
 		}
 		return keys;
 	}
