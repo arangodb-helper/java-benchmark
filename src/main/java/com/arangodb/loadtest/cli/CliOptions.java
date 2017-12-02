@@ -29,7 +29,7 @@ import com.arangodb.entity.LoadBalancingStrategy;
  */
 public class CliOptions {
 
-	@CliOptionInfo(description = "test case to use. possible values: \"write\", \"read\"", opt = "t", required = true)
+	@CliOptionInfo(description = "comma separeted list of test cases to use. possible values: \"write\", \"read\"", opt = "t", required = true)
 	private String test;
 
 	@CliOptionInfo(description = "number of operations per thread", defaultValue = "1000")

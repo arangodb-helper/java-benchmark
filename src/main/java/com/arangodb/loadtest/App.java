@@ -94,11 +94,9 @@ public class App {
 				System.exit(1);
 			}
 
-			final List<String[]> cases = Stream.of(caseString.split(",")).map(e -> e.split(":"))
+			final List<TestCase> tests = Stream.of(caseString.split(",")).map(t -> TestCase.valueOf(t.toUpperCase()))
 					.collect(Collectors.toList());
-			for (final String[] caze : cases) {
-				run(app, options, builder, TestCase.valueOf(caze[0].toUpperCase()), System.out);
-			}
+			run(app, options, builder, tests, System.out);
 		} catch (final Exception e) {
 			LOGGER.error("Failed", e);
 		}
@@ -108,17 +106,20 @@ public class App {
 		final App app,
 		final CliOptions options,
 		final ArangoDB.Builder builder,
-		final TestCase test,
+		final List<TestCase> tests,
 		final PrintStream out) throws InterruptedException, IOException {
 		for (int i = 0; i < options.getRuns(); i++) {
+			out.println("RUN " + (i + 1));
 			final boolean dropDB = (options.getDropDB() != null && options.getDropDB().booleanValue()) || i > 0;
 			app.setup(builder, options, dropDB);
-			if (test == TestCase.READ) {
-				app.run(options, test, (num, times) -> new DocumentReadWorker(builder, options, num, times), out);
-			} else if (test == TestCase.WRITE) {
-				app.run(options, test,
-					(num, times) -> new DocumentWriteWorker(builder, options, num, times, new DocumentCreator(options)),
-					out);
+			for (final TestCase test : tests) {
+				if (test == TestCase.READ) {
+					app.run(options, test, (num, times) -> new DocumentReadWorker(builder, options, num, times), out);
+				} else if (test == TestCase.WRITE) {
+					app.run(options, test, (num, times) -> new DocumentWriteWorker(builder, options, num, times,
+							new DocumentCreator(options)),
+						out);
+				}
 			}
 		}
 	}
@@ -161,8 +162,9 @@ public class App {
 		final TestCase testCase,
 		final ThreadWorkerCreator creator,
 		final PrintStream out) throws InterruptedException, IOException {
-		out.println(String.format("starting test case \"%s\" with %s threads", testCase.toString().toLowerCase(),
-			options.getThreads()));
+		out.println(String.format("TEST CASE \"%s\". %s threads, %s connections/thread, %s protocol",
+			testCase.toString().toLowerCase(), options.getThreads(), options.getConnections(),
+			options.getProtocol().toString().toLowerCase()));
 
 		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final ArangoThreadWorker[] workers = new ArangoThreadWorker[options.getThreads()];
