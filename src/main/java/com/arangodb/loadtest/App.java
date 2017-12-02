@@ -191,7 +191,7 @@ public class App {
 		final Integer numThreads = options.getThreads();
 		final int batchSize = options.getBatchSize();
 		int currentOp = 0;
-		final int sleep = 10000;
+		final int sleep = options.getOutputInterval() * 1000;
 		while (currentOp < options.getRequests()) {
 			try {
 				Thread.sleep(sleep);

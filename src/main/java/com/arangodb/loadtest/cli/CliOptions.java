@@ -92,6 +92,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "automatic acquire list of endpoints to use for load balancing", defaultValue = "false")
 	private Boolean acquireHostList;
 
+	@CliOptionInfo(description = "output interval in seconds", defaultValue = "1")
+	private Integer outputInterval;
+
 	public CliOptions() {
 		super();
 	}
@@ -262,6 +265,14 @@ public class CliOptions {
 
 	public void setAcquireHostList(final Boolean acquireHostList) {
 		this.acquireHostList = acquireHostList;
+	}
+
+	public Integer getOutputInterval() {
+		return outputInterval;
+	}
+
+	public void setOutputInterval(final Integer outputInterval) {
+		this.outputInterval = outputInterval;
 	}
 
 }
