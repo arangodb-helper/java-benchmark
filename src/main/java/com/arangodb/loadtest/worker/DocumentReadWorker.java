@@ -54,7 +54,7 @@ public class DocumentReadWorker extends ArangoThreadWorker {
 	@Override
 	public void run() {
 		try {
-			for (int i = 0; i < options.getRuns(); i++) {
+			for (int i = 0; i < options.getRequests(); i++) {
 				reader.run();
 			}
 		} catch (final Exception e) {

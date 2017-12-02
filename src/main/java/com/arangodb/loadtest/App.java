@@ -110,21 +110,23 @@ public class App {
 		final ArangoDB.Builder builder,
 		final TestCase test,
 		final PrintStream out) throws InterruptedException, IOException {
-
-		app.setup(builder, options);
-		if (test == TestCase.READ) {
-			app.run(options, test, (num, times) -> new DocumentReadWorker(builder, options, num, times), out);
-		} else if (test == TestCase.WRITE) {
-			app.run(options, test,
-				(num, times) -> new DocumentWriteWorker(builder, options, num, times, new DocumentCreator(options)),
-				out);
+		for (int i = 0; i < options.getRuns(); i++) {
+			final boolean dropDB = (options.getDropDB() != null && options.getDropDB().booleanValue()) || i > 0;
+			app.setup(builder, options, dropDB);
+			if (test == TestCase.READ) {
+				app.run(options, test, (num, times) -> new DocumentReadWorker(builder, options, num, times), out);
+			} else if (test == TestCase.WRITE) {
+				app.run(options, test,
+					(num, times) -> new DocumentWriteWorker(builder, options, num, times, new DocumentCreator(options)),
+					out);
+			}
 		}
 	}
 
-	private void setup(final Builder builder, final CliOptions options) {
+	private void setup(final Builder builder, final CliOptions options, final boolean dropDB) {
 		final ArangoDB arangoDB = builder.build();
 		final String database = options.getDatabase();
-		if (options.getDropDB() != null && options.getDropDB().booleanValue()) {
+		if (dropDB) {
 			try {
 				arangoDB.db(database).drop();
 			} catch (final ArangoDBException e) {
@@ -188,7 +190,7 @@ public class App {
 		final int batchSize = options.getBatchSize();
 		int currentOp = 0;
 		final int sleep = 10000;
-		while (currentOp < options.getRuns()) {
+		while (currentOp < options.getRequests()) {
 			try {
 				Thread.sleep(sleep);
 			} catch (final InterruptedException e) {

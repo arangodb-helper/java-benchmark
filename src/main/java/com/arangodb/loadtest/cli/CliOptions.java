@@ -32,7 +32,10 @@ public class CliOptions {
 	@CliOptionInfo(description = "test case to use. possible values: \"write\", \"read\"", opt = "t", required = true)
 	private String test;
 
-	@CliOptionInfo(description = "run test n times", defaultValue = "1")
+	@CliOptionInfo(description = "number of operations per thread", defaultValue = "1000")
+	private Integer requests;
+
+	@CliOptionInfo(description = "run test n times. drop database between runs", defaultValue = "1")
 	private Integer runs;
 
 	@CliOptionInfo(description = "comma separated list of endpoints to connect to", opt = "e", defaultValue = "127.0.0.1:8529")
@@ -99,6 +102,14 @@ public class CliOptions {
 
 	public void setTest(final String test) {
 		this.test = test;
+	}
+
+	public Integer getRequests() {
+		return requests;
+	}
+
+	public void setRequests(final Integer requests) {
+		this.requests = requests;
 	}
 
 	public Integer getRuns() {
