@@ -41,10 +41,10 @@ public abstract class ArangoTestCase implements Closeable {
 		ArangoTestCase create(
 			ArangoDB.Builder builder,
 			CliOptions options,
-			KeyGen keyGen,
-			DocumentCreator documentCreator,
 			int num,
-			Collection<Long> times);
+			Collection<Long> times,
+			KeyGen keyGen,
+			DocumentCreator documentCreator);
 	}
 
 	protected final CliOptions options;

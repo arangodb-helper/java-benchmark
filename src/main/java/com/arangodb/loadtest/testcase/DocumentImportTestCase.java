@@ -36,15 +36,15 @@ import com.arangodb.loadtest.util.KeyGen;
  * @author Mark Vollmary
  *
  */
-public class DocumentWriteTestCase extends ArangoTestCase {
+public class DocumentImportTestCase extends ArangoTestCase {
 
 	private final ArangoCollection collection;
 	private final DocumentCreator documentCreator;
 	private final KeyGen keyGen;
 	private List<BaseDocument> documents;
 
-	public DocumentWriteTestCase(final ArangoDB.Builder builder, final CliOptions options, final KeyGen keyGen,
-		final DocumentCreator documentCreator, final int num, final Collection<Long> times) {
+	public DocumentImportTestCase(final ArangoDB.Builder builder, final CliOptions options, final int num,
+		final Collection<Long> times, final KeyGen keyGen, final DocumentCreator documentCreator) {
 		super(builder, options, num, times);
 		this.keyGen = keyGen;
 		collection = arango.db(options.getDatabase()).collection(options.getCollection());
@@ -59,12 +59,7 @@ public class DocumentWriteTestCase extends ArangoTestCase {
 
 	@Override
 	protected void _run() throws ArangoDBException {
-		final Integer batchSize = options.getBatchSize();
-		if (batchSize == 1) {
-			collection.insertDocument(documents.get(0));
-		} else {
-			collection.insertDocuments(documents);
-		}
+		collection.importDocuments(documents);
 	}
 
 }

@@ -52,7 +52,7 @@ public class ThreadWorker extends Thread implements Closeable {
 		this.options = options;
 		final ArrayList<Long> l = new ArrayList<>();
 		times.put("thread" + num, l);
-		test = instanceCreator.create(builder, options, new KeyGen(options, num), documentCreator, num, l);
+		test = instanceCreator.create(builder, options, num, l, new KeyGen(options, num), documentCreator);
 	}
 
 	@Override

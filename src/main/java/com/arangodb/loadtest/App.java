@@ -45,8 +45,11 @@ import com.arangodb.ArangoDB.Builder;
 import com.arangodb.ArangoDBException;
 import com.arangodb.loadtest.cli.CliOptionUtils;
 import com.arangodb.loadtest.cli.CliOptions;
+import com.arangodb.loadtest.testcase.DocumentImportTestCase;
+import com.arangodb.loadtest.testcase.DocumentInsertTestCase;
 import com.arangodb.loadtest.testcase.DocumentReadTestCase;
-import com.arangodb.loadtest.testcase.DocumentWriteTestCase;
+import com.arangodb.loadtest.testcase.DocumentReplaceTestCase;
+import com.arangodb.loadtest.testcase.DocumentUpdateTestCase;
 import com.arangodb.loadtest.testcase.GetVersionTestCase;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.worker.ThreadWorker;
@@ -60,7 +63,7 @@ import com.arangodb.model.CollectionCreateOptions;
 public class App {
 
 	enum TestCase {
-		VERSION, DOCUMENT_GET, DOCUMENT_INSERT, DOCUMENT_IMPORT
+		VERSION, DOCUMENT_GET, DOCUMENT_INSERT, DOCUMENT_IMPORT, DOCUMENT_UPDATE, DOCUMENT_REPLACE
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
@@ -126,15 +129,30 @@ public class App {
 				switch (test) {
 				case VERSION:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
-							(b, o, k, d, n, t) -> new GetVersionTestCase(b, o, n, t), null);
+							(b, o, n, t, k, d) -> new GetVersionTestCase(b, o, n, t), null);
 					break;
 				case DOCUMENT_GET:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
-							(b, o, k, d, n, t) -> new DocumentReadTestCase(b, o, k, n, t), null);
+							(b, o, n, t, k, d) -> new DocumentReadTestCase(b, o, n, t, k), null);
 					break;
 				case DOCUMENT_INSERT:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
-							(b, o, k, d, n, t) -> new DocumentWriteTestCase(b, o, k, d, n, t),
+							(b, o, n, t, k, d) -> new DocumentInsertTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options));
+					break;
+				case DOCUMENT_IMPORT:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new DocumentImportTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options));
+					break;
+				case DOCUMENT_UPDATE:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new DocumentUpdateTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options));
+					break;
+				case DOCUMENT_REPLACE:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new DocumentReplaceTestCase(b, o, n, t, k, d),
 							new DocumentCreator(options));
 					break;
 				default:
