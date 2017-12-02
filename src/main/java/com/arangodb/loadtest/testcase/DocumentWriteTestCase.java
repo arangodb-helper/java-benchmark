@@ -20,12 +20,8 @@
 
 package com.arangodb.loadtest.testcase;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoDB;
@@ -34,59 +30,40 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.util.KeyGen;
-import com.arangodb.loadtest.util.Stopwatch;
 
 /**
  * 
  * @author Mark Vollmary
  *
  */
-public class DocumentWriteTestCase implements ArangoTestCase {
+public class DocumentWriteTestCase extends ArangoTestCase {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DocumentWriteTestCase.class);
-
-	private final ArangoDB arango;
 	private final ArangoCollection collection;
-	private final String id;
 	private final DocumentCreator documentCreator;
-	private final boolean log;
-	private final Collection<Long> times;
-
-	private final CliOptions options;
 	private final KeyGen keyGen;
+	private List<BaseDocument> documents;
 
 	public DocumentWriteTestCase(final ArangoDB.Builder builder, final CliOptions options, final KeyGen keyGen,
 		final DocumentCreator documentCreator, final int num, final Collection<Long> times) {
-		this.options = options;
+		super(builder, options, num, times);
 		this.keyGen = keyGen;
-		this.log = false;
-		this.times = times;
-		arango = builder.build();
 		collection = arango.db(options.getDatabase()).collection(options.getCollection());
 		this.documentCreator = documentCreator;
-		this.id = (new Integer(num)).toString();
 	}
 
 	@Override
-	public void close() throws IOException {
-		arango.shutdown();
-	}
-
-	@Override
-	public void run() throws ArangoDBException {
+	protected void _prepare() {
 		final Integer batchSize = options.getBatchSize();
-		final List<BaseDocument> documents = documentCreator.create(keyGen.generateKeys(batchSize));
-		final Stopwatch sw = new Stopwatch();
+		documents = documentCreator.create(keyGen.generateKeys(batchSize));
+	}
+
+	@Override
+	protected void _run() throws ArangoDBException {
+		final Integer batchSize = options.getBatchSize();
 		if (batchSize == 1) {
 			collection.insertDocument(documents.get(0));
 		} else {
 			collection.insertDocuments(documents);
-		}
-		final long elapsedTime = sw.getElapsedTime();
-		times.add(elapsedTime);
-		if (log) {
-			LOGGER.info(String.format("thread [%s] finished writing of %s documents in %s ms", id, documents.size(),
-				elapsedTime));
 		}
 	}
 

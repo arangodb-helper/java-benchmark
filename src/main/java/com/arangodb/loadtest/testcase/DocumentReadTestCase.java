@@ -20,12 +20,8 @@
 
 package com.arangodb.loadtest.testcase;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoDB;
@@ -34,47 +30,34 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.MultiDocumentEntity;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.util.KeyGen;
-import com.arangodb.loadtest.util.Stopwatch;
 
 /**
  * 
  * @author Mark Vollmary
  *
  */
-public class DocumentReadTestCase implements ArangoTestCase {
+public class DocumentReadTestCase extends ArangoTestCase {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(DocumentReadTestCase.class);
-
-	private final ArangoDB arango;
 	private final ArangoCollection collection;
-	private final String id;
-	private final boolean log;
-	private final Collection<Long> times;
-
-	private final CliOptions options;
 	private final KeyGen keyGen;
+	private List<String> keys;
 
 	public DocumentReadTestCase(final ArangoDB.Builder builder, final CliOptions options, final KeyGen keyGen,
 		final int num, final Collection<Long> times) {
-		this.options = options;
+		super(builder, options, num, times);
 		this.keyGen = keyGen;
-		this.log = false;
-		this.times = times;
-		arango = builder.build();
 		collection = arango.db(options.getDatabase()).collection(options.getCollection());
-		this.id = (new Integer(num)).toString();
 	}
 
 	@Override
-	public void close() throws IOException {
-		arango.shutdown();
-	}
-
-	@Override
-	public void run() throws ArangoDBException {
+	protected void _prepare() {
 		final Integer batchSize = options.getBatchSize();
-		final List<String> keys = keyGen.generateKeys(batchSize);
-		final Stopwatch sw = new Stopwatch();
+		keys = keyGen.generateKeys(batchSize);
+	}
+
+	@Override
+	protected void _run() throws ArangoDBException {
+		final Integer batchSize = options.getBatchSize();
 		if (batchSize == 1) {
 			final BaseDocument doc = collection.getDocument(keys.get(0), BaseDocument.class);
 			if (doc == null) {
@@ -87,12 +70,6 @@ public class DocumentReadTestCase implements ArangoTestCase {
 				throw new ArangoDBException(String.format("Failed to read all documents. %s / %s documents successful",
 					numDocs, batchSize));
 			}
-		}
-		final long elapsedTime = sw.getElapsedTime();
-		times.add(elapsedTime);
-		if (log) {
-			LOGGER.info(
-				String.format("thread [%s] finished reading of %s documents in %s ms", id, batchSize, elapsedTime));
 		}
 	}
 

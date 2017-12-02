@@ -47,6 +47,7 @@ import com.arangodb.loadtest.cli.CliOptionUtils;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.testcase.DocumentReadTestCase;
 import com.arangodb.loadtest.testcase.DocumentWriteTestCase;
+import com.arangodb.loadtest.testcase.GetVersionTestCase;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.worker.ThreadWorker;
 import com.arangodb.model.CollectionCreateOptions;
@@ -59,7 +60,7 @@ import com.arangodb.model.CollectionCreateOptions;
 public class App {
 
 	enum TestCase {
-		READ, WRITE
+		VERSION, DOCUMENT_GET, DOCUMENT_INSERT, DOCUMENT_IMPORT
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
@@ -122,15 +123,21 @@ public class App {
 			app.setup(builder, options, dropDB);
 			for (final TestCase test : tests) {
 				final ThreadWorkerCreator creator;
-				if (test == TestCase.READ) {
+				switch (test) {
+				case VERSION:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
-							(b, o, k, d, n, t) -> new DocumentReadTestCase(b, o, k, n, t),
-							new DocumentCreator(options));
-				} else if (test == TestCase.WRITE) {
+							(b, o, k, d, n, t) -> new GetVersionTestCase(b, o, n, t), null);
+					break;
+				case DOCUMENT_GET:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, k, d, n, t) -> new DocumentReadTestCase(b, o, k, n, t), null);
+					break;
+				case DOCUMENT_INSERT:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, k, d, n, t) -> new DocumentWriteTestCase(b, o, k, d, n, t),
 							new DocumentCreator(options));
-				} else {
+					break;
+				default:
 					continue;
 				}
 				app.run(options, test, creator, out);

@@ -21,6 +21,7 @@
 package com.arangodb.loadtest.testcase;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 
 import com.arangodb.ArangoDB;
@@ -28,12 +29,13 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.util.KeyGen;
+import com.arangodb.loadtest.util.Stopwatch;
 
 /**
  * @author Mark Vollmary
  *
  */
-public interface ArangoTestCase extends Closeable {
+public abstract class ArangoTestCase implements Closeable {
 
 	public static interface InstanceCreator {
 		ArangoTestCase create(
@@ -45,6 +47,35 @@ public interface ArangoTestCase extends Closeable {
 			Collection<Long> times);
 	}
 
-	void run() throws ArangoDBException;
+	protected final CliOptions options;
+	protected final ArangoDB arango;
+	protected final int num;
+	protected final Collection<Long> times;
 
+	public ArangoTestCase(final ArangoDB.Builder builder, final CliOptions options, final int num,
+		final Collection<Long> times) {
+		super();
+		arango = builder.build();
+		this.options = options;
+		this.num = num;
+		this.times = times;
+	}
+
+	protected void _prepare() {
+	};
+
+	protected abstract void _run() throws ArangoDBException;
+
+	public void run() throws ArangoDBException {
+		_prepare();
+		final Stopwatch sw = new Stopwatch();
+		_run();
+		final long elapsedTime = sw.getElapsedTime();
+		times.add(elapsedTime);
+	};
+
+	@Override
+	public void close() throws IOException {
+		arango.shutdown();
+	}
 }
