@@ -38,6 +38,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "run test n times. drop database between runs", defaultValue = "1")
 	private Integer runs;
 
+	@CliOptionInfo(description = "delay (in seconds) to use between runs (necessary only when --runs > 1)", defaultValue = "0")
+	private Integer delay;
+
 	@CliOptionInfo(description = "comma separated list of endpoints to connect to", opt = "e", defaultValue = "127.0.0.1:8529")
 	private String endpoints;
 
@@ -121,6 +124,14 @@ public class CliOptions {
 
 	public void setRuns(final Integer runs) {
 		this.runs = runs;
+	}
+
+	public Integer getDelay() {
+		return delay;
+	}
+
+	public void setDelay(final Integer delay) {
+		this.delay = delay;
 	}
 
 	public String getEndpoints() {

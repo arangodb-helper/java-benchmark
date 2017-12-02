@@ -109,6 +109,14 @@ public class App {
 		final List<TestCase> tests,
 		final PrintStream out) throws InterruptedException, IOException {
 		for (int i = 0; i < options.getRuns(); i++) {
+			final Integer delay = options.getDelay();
+			if (i > 0 && delay > 0) {
+				out.println(String.format("SLEEP %s seconds till next run", delay));
+				try {
+					Thread.sleep(delay * 1000);
+				} catch (final InterruptedException e) {
+				}
+			}
 			out.println("RUN " + (i + 1));
 			final boolean dropDB = (options.getDropDB() != null && options.getDropDB().booleanValue()) || i > 0;
 			app.setup(builder, options, dropDB);
