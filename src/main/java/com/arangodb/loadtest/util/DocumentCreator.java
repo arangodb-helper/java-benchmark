@@ -20,10 +20,14 @@
 
 package com.arangodb.loadtest.util;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -37,17 +41,56 @@ import com.arangodb.loadtest.cli.CliOptions;
 public class DocumentCreator {
 
 	private final List<BaseDocument> cache;
+	private final CliOptions options;
 
 	public DocumentCreator(final CliOptions options) {
 		super();
-		cache = new ArrayList<>();
-		for (int j = 0; j < options.getBatchSize(); j++) {
-			final BaseDocument doc = new BaseDocument();
-			for (int i = 0; i < options.getDocSize(); i++) {
-				doc.addAttribute("field" + i, RandomStringUtils.random(options.getDocFieldSize(), false, true));
-			}
-			cache.add(doc);
+		this.options = options;
+		cache = Stream.generate(() -> createObject(0)).limit(options.getBatchSize()).map(obj -> new BaseDocument(obj))
+				.collect(Collectors.toList());
+	}
+
+	private void createSimple(final Map<String, Object> doc) {
+		final AtomicInteger i = new AtomicInteger(0);
+		Stream.generate(() -> createString(options.getDocSimpleSize())).limit(options.getDocNumSimple())
+				.forEach(s -> doc.put("simple" + i.getAndIncrement(), s));
+	}
+
+	private void createLargeSimple(final Map<String, Object> doc) {
+		final AtomicInteger i = new AtomicInteger(0);
+		Stream.generate(() -> createString(options.getDocLargeSimpleSize())).limit(options.getDocNumLargeSimple())
+				.forEach(s -> doc.put("large" + i.getAndIncrement(), s));
+	}
+
+	private void createArrays(final Map<String, Object> doc) {
+		final AtomicInteger i = new AtomicInteger(0);
+		Stream.generate(() -> createArray(options.getDocArraysSize())).limit(options.getDocNumArrays())
+				.forEach(a -> doc.put("array" + i.getAndIncrement(), a));
+	}
+
+	private void createObjects(final Map<String, Object> doc, final int depth) {
+		final AtomicInteger i = new AtomicInteger(0);
+		Stream.generate(() -> createObject(depth)).limit(options.getDocNumObjects())
+				.forEach(o -> doc.put("object" + i.getAndIncrement(), o));
+	}
+
+	private Map<String, Object> createObject(final int depth) {
+		final Map<String, Object> doc = new LinkedHashMap<>();
+		createSimple(doc);
+		createLargeSimple(doc);
+		createArrays(doc);
+		if (depth < options.getDocNestingDepth()) {
+			createObjects(doc, depth + 1);
 		}
+		return doc;
+	}
+
+	private static String createString(final int size) {
+		return RandomStringUtils.random(size, false, true);
+	}
+
+	private static Collection<String> createArray(final int size) {
+		return Stream.generate(() -> createString(5)).limit(size).collect(Collectors.toList());
 	}
 
 	public List<BaseDocument> create(final Collection<String> keys) {

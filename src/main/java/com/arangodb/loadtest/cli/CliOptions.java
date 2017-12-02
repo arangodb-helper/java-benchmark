@@ -56,12 +56,6 @@ public class CliOptions {
 	@CliOptionInfo(description = "number of parallel client threads", defaultValue = "1")
 	private Integer threads;
 
-	@CliOptionInfo(description = "number of field in the documents", defaultValue = "1")
-	private Integer docSize;
-
-	@CliOptionInfo(description = "the field size in the documents", defaultValue = "10")
-	private Integer docFieldSize;
-
 	@CliOptionInfo(description = "network protocol to use", defaultValue = "vst")
 	private Protocol protocol;
 
@@ -97,6 +91,54 @@ public class CliOptions {
 
 	@CliOptionInfo(description = "output interval in seconds", defaultValue = "1")
 	private Integer outputInterval;
+
+	@CliOptionInfo(description = "number of String fields in the documents", defaultValue = "5")
+	private Integer docNumSimple;
+
+	@CliOptionInfo(description = "number of large String fields in the documents", defaultValue = "0")
+	private Integer docNumLargeSimple;
+
+	@CliOptionInfo(description = "number of nested objects in the documents", defaultValue = "0")
+	private Integer docNumObjects;
+
+	@CliOptionInfo(description = "number of array fields in the documents", defaultValue = "0")
+	private Integer docNumArrays;
+
+	@CliOptionInfo(description = "size of String fields in the documents", defaultValue = "20")
+	private Integer docSimpleSize;
+
+	@CliOptionInfo(description = "size of large String fields in the documents", defaultValue = "100")
+	private Integer docLargeSimpleSize;
+
+	@CliOptionInfo(description = "size of array fields in the documents", defaultValue = "10")
+	private Integer docArraysSize;
+
+	@CliOptionInfo(description = "max depth of nested objects in the documents", defaultValue = "1")
+	private Integer docNestingDepth;
+
+	@CliOptionInfo(description = "comma separated list of types of indexes on String fields")
+	private Index[] docIndexSimple;
+
+	@CliOptionInfo(description = "number of String fields to be indexed")
+	private Integer docNumIndexSimple;
+
+	@CliOptionInfo(description = "comma separated list of types of indexes on large String fields")
+	private Index[] docIndexLargeSimple;
+
+	@CliOptionInfo(description = "number of large String fields to be indexed")
+	private Integer docNumIndexLargeSimple;
+
+	@CliOptionInfo(description = "comma separated list of types of indexes on nested objects")
+	private Index[] docIndexObjects;
+
+	@CliOptionInfo(description = "number of nexted objects to be indexed")
+	private Integer docNumIndexObjects;
+
+	@CliOptionInfo(description = "comma separated list of types of indexes on array fields")
+	private Index[] docIndexArrays;
+
+	@CliOptionInfo(description = "number of array fields to be indexed")
+	private Integer docNumIndexArrays;
 
 	public CliOptions() {
 		super();
@@ -172,22 +214,6 @@ public class CliOptions {
 
 	public void setThreads(final Integer threads) {
 		this.threads = threads;
-	}
-
-	public Integer getDocSize() {
-		return docSize;
-	}
-
-	public void setDocSize(final Integer docSize) {
-		this.docSize = docSize;
-	}
-
-	public Integer getDocFieldSize() {
-		return docFieldSize;
-	}
-
-	public void setDocFieldSize(final Integer docFieldSize) {
-		this.docFieldSize = docFieldSize;
 	}
 
 	public Protocol getProtocol() {
@@ -284,6 +310,134 @@ public class CliOptions {
 
 	public void setOutputInterval(final Integer outputInterval) {
 		this.outputInterval = outputInterval;
+	}
+
+	public Integer getDocNumSimple() {
+		return docNumSimple;
+	}
+
+	public void setDocNumSimple(final Integer docNumSimple) {
+		this.docNumSimple = docNumSimple;
+	}
+
+	public Integer getDocNumLargeSimple() {
+		return docNumLargeSimple;
+	}
+
+	public void setDocNumLargeSimple(final Integer docNumLargeSimple) {
+		this.docNumLargeSimple = docNumLargeSimple;
+	}
+
+	public Integer getDocNumObjects() {
+		return docNumObjects;
+	}
+
+	public void setDocNumObjects(final Integer docNumObjects) {
+		this.docNumObjects = docNumObjects;
+	}
+
+	public Integer getDocNumArrays() {
+		return docNumArrays;
+	}
+
+	public void setDocNumArrays(final Integer docNumArrays) {
+		this.docNumArrays = docNumArrays;
+	}
+
+	public Integer getDocSimpleSize() {
+		return docSimpleSize;
+	}
+
+	public void setDocSimpleSize(final Integer docSimpleSize) {
+		this.docSimpleSize = docSimpleSize;
+	}
+
+	public Integer getDocLargeSimpleSize() {
+		return docLargeSimpleSize;
+	}
+
+	public void setDocLargeSimpleSize(final Integer docLargeSimpleSize) {
+		this.docLargeSimpleSize = docLargeSimpleSize;
+	}
+
+	public Integer getDocArraysSize() {
+		return docArraysSize;
+	}
+
+	public void setDocArraysSize(final Integer docArraysSize) {
+		this.docArraysSize = docArraysSize;
+	}
+
+	public Integer getDocNestingDepth() {
+		return docNestingDepth;
+	}
+
+	public void setDocNestingDepth(final Integer docNestingDepth) {
+		this.docNestingDepth = docNestingDepth;
+	}
+
+	public Index[] getDocIndexSimple() {
+		return docIndexSimple;
+	}
+
+	public void setDocIndexSimple(final Index[] docIndexSimple) {
+		this.docIndexSimple = docIndexSimple;
+	}
+
+	public Integer getDocNumIndexSimple() {
+		return docNumIndexSimple;
+	}
+
+	public void setDocNumIndexSimple(final Integer docNumIndexSimple) {
+		this.docNumIndexSimple = docNumIndexSimple;
+	}
+
+	public Index[] getDocIndexLargeSimple() {
+		return docIndexLargeSimple;
+	}
+
+	public void setDocIndexLargeSimple(final Index[] docIndexLargeSimple) {
+		this.docIndexLargeSimple = docIndexLargeSimple;
+	}
+
+	public Integer getDocNumIndexLargeSimple() {
+		return docNumIndexLargeSimple;
+	}
+
+	public void setDocNumIndexLargeSimple(final Integer docNumIndexLargeSimple) {
+		this.docNumIndexLargeSimple = docNumIndexLargeSimple;
+	}
+
+	public Index[] getDocIndexObjects() {
+		return docIndexObjects;
+	}
+
+	public void setDocIndexObjects(final Index[] docIndexObjects) {
+		this.docIndexObjects = docIndexObjects;
+	}
+
+	public Integer getDocNumIndexObjects() {
+		return docNumIndexObjects;
+	}
+
+	public void setDocNumIndexObjects(final Integer docNumIndexObjects) {
+		this.docNumIndexObjects = docNumIndexObjects;
+	}
+
+	public Index[] getDocIndexArrays() {
+		return docIndexArrays;
+	}
+
+	public void setDocIndexArrays(final Index[] docIndexArrays) {
+		this.docIndexArrays = docIndexArrays;
+	}
+
+	public Integer getDocNumIndexArrays() {
+		return docNumIndexArrays;
+	}
+
+	public void setDocNumIndexArrays(final Integer docNumIndexArrays) {
+		this.docNumIndexArrays = docNumIndexArrays;
 	}
 
 }
