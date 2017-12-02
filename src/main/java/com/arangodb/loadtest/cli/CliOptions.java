@@ -80,6 +80,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "replication factor of created collections", defaultValue = "1")
 	private Integer replicationFactor;
 
+	@CliOptionInfo(description = "use waitForSync for created collections", defaultValue = "false")
+	private Boolean waitForSync;
+
 	@CliOptionInfo(description = "document key prefix (necessary only when run multiple times)")
 	private String keyPrefix;
 
@@ -224,6 +227,14 @@ public class CliOptions {
 
 	public void setReplicationFactor(final Integer replicationFactor) {
 		this.replicationFactor = replicationFactor;
+	}
+
+	public Boolean getWaitForSync() {
+		return waitForSync;
+	}
+
+	public void setWaitForSync(final Boolean waitForSync) {
+		this.waitForSync = waitForSync;
 	}
 
 	public String getKeyPrefix() {

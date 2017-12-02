@@ -139,8 +139,9 @@ public class App {
 		}
 		final String collection = options.getCollection();
 		try {
-			arangoDB.db(database).createCollection(collection, new CollectionCreateOptions()
-					.numberOfShards(options.getNumberOfShards()).replicationFactor(options.getReplicationFactor()));
+			arangoDB.db(database).createCollection(collection,
+				new CollectionCreateOptions().numberOfShards(options.getNumberOfShards())
+						.replicationFactor(options.getReplicationFactor()).waitForSync(options.getWaitForSync()));
 		} catch (final Exception e) {
 			if (!arangoDB.db(database).collection(collection).exists()) {
 				LOGGER.error(String.format("Failed to create collection %s", collection));
