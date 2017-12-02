@@ -41,8 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoDB;
-import com.arangodb.ArangoDB.Builder;
-import com.arangodb.ArangoDBException;
 import com.arangodb.loadtest.cli.CliOptionUtils;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.testcase.DocumentImportTestCase;
@@ -51,9 +49,10 @@ import com.arangodb.loadtest.testcase.DocumentReadTestCase;
 import com.arangodb.loadtest.testcase.DocumentReplaceTestCase;
 import com.arangodb.loadtest.testcase.DocumentUpdateTestCase;
 import com.arangodb.loadtest.testcase.GetVersionTestCase;
+import com.arangodb.loadtest.util.DatabaseSetupUtils;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.worker.ThreadWorker;
-import com.arangodb.model.CollectionCreateOptions;
+import com.arangodb.loadtest.worker.ThreadWorker.InstanceCreator;
 
 /**
  * 
@@ -123,9 +122,9 @@ public class App {
 			}
 			out.println("# RUN " + (i + 1));
 			final boolean dropDB = (options.getDropDB() != null && options.getDropDB().booleanValue()) || i > 0;
-			app.setup(builder, options, dropDB);
+			DatabaseSetupUtils.setup(builder, options, dropDB);
 			for (final TestCase test : tests) {
-				final ThreadWorkerCreator creator;
+				final InstanceCreator creator;
 				switch (test) {
 				case VERSION:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
@@ -163,43 +162,10 @@ public class App {
 		}
 	}
 
-	private void setup(final Builder builder, final CliOptions options, final boolean dropDB) {
-		final ArangoDB arangoDB = builder.build();
-		final String database = options.getDatabase();
-		if (dropDB) {
-			try {
-				arangoDB.db(database).drop();
-			} catch (final ArangoDBException e) {
-			}
-		}
-		try {
-			arangoDB.createDatabase(database);
-		} catch (final ArangoDBException e) {
-			if (!arangoDB.db(database).exists()) {
-				LOGGER.error(String.format("Failed to create database: %s", database));
-			}
-		}
-		final String collection = options.getCollection();
-		try {
-			arangoDB.db(database).createCollection(collection,
-				new CollectionCreateOptions().numberOfShards(options.getNumberOfShards())
-						.replicationFactor(options.getReplicationFactor()).waitForSync(options.getWaitForSync()));
-		} catch (final Exception e) {
-			if (!arangoDB.db(database).collection(collection).exists()) {
-				LOGGER.error(String.format("Failed to create collection %s", collection));
-			}
-		}
-		arangoDB.shutdown();
-	}
-
-	public interface ThreadWorkerCreator {
-		ThreadWorker create(int num, Map<String, Collection<Long>> times);
-	}
-
 	private void run(
 		final CliOptions options,
 		final TestCase testCase,
-		final ThreadWorkerCreator creator,
+		final InstanceCreator creator,
 		final PrintStream out) throws InterruptedException, IOException {
 		out.println(String.format("## TEST CASE \"%s\". %s threads, %s connections/thread, %s protocol",
 			testCase.toString().toLowerCase(), options.getThreads(), options.getConnections(),

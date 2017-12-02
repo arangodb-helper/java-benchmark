@@ -20,6 +20,8 @@
 
 package com.arangodb.loadtest.cli;
 
+import java.util.Collection;
+
 import com.arangodb.Protocol;
 import com.arangodb.entity.LoadBalancingStrategy;
 
@@ -116,28 +118,28 @@ public class CliOptions {
 	@CliOptionInfo(description = "max depth of nested objects in the documents", defaultValue = "1")
 	private Integer docNestingDepth;
 
-	@CliOptionInfo(description = "comma separated list of types of indexes on String fields")
-	private Index[] docIndexSimple;
+	@CliOptionInfo(description = "comma separated list of types of indexes on String fields", componentType = Index.class)
+	private Collection<Index> docIndexSimple;
 
-	@CliOptionInfo(description = "number of String fields to be indexed")
+	@CliOptionInfo(description = "number of String fields to be indexed", defaultValue = "1")
 	private Integer docNumIndexSimple;
 
-	@CliOptionInfo(description = "comma separated list of types of indexes on large String fields")
-	private Index[] docIndexLargeSimple;
+	@CliOptionInfo(description = "comma separated list of types of indexes on large String fields", componentType = Index.class)
+	private Collection<Index> docIndexLargeSimple;
 
-	@CliOptionInfo(description = "number of large String fields to be indexed")
+	@CliOptionInfo(description = "number of large String fields to be indexed", defaultValue = "1")
 	private Integer docNumIndexLargeSimple;
 
-	@CliOptionInfo(description = "comma separated list of types of indexes on nested objects")
-	private Index[] docIndexObjects;
+	@CliOptionInfo(description = "comma separated list of types of indexes on nested objects", componentType = Index.class)
+	private Collection<Index> docIndexObjects;
 
-	@CliOptionInfo(description = "number of nexted objects to be indexed")
+	@CliOptionInfo(description = "number of nexted objects to be indexed", defaultValue = "1")
 	private Integer docNumIndexObjects;
 
-	@CliOptionInfo(description = "comma separated list of types of indexes on array fields")
-	private Index[] docIndexArrays;
+	@CliOptionInfo(description = "comma separated list of types of indexes on array fields", componentType = Index.class)
+	private Collection<Index> docIndexArrays;
 
-	@CliOptionInfo(description = "number of array fields to be indexed")
+	@CliOptionInfo(description = "number of array fields to be indexed", defaultValue = "1")
 	private Integer docNumIndexArrays;
 
 	public CliOptions() {
@@ -376,11 +378,11 @@ public class CliOptions {
 		this.docNestingDepth = docNestingDepth;
 	}
 
-	public Index[] getDocIndexSimple() {
+	public Collection<Index> getDocIndexSimple() {
 		return docIndexSimple;
 	}
 
-	public void setDocIndexSimple(final Index[] docIndexSimple) {
+	public void setDocIndexSimple(final Collection<Index> docIndexSimple) {
 		this.docIndexSimple = docIndexSimple;
 	}
 
@@ -392,11 +394,11 @@ public class CliOptions {
 		this.docNumIndexSimple = docNumIndexSimple;
 	}
 
-	public Index[] getDocIndexLargeSimple() {
+	public Collection<Index> getDocIndexLargeSimple() {
 		return docIndexLargeSimple;
 	}
 
-	public void setDocIndexLargeSimple(final Index[] docIndexLargeSimple) {
+	public void setDocIndexLargeSimple(final Collection<Index> docIndexLargeSimple) {
 		this.docIndexLargeSimple = docIndexLargeSimple;
 	}
 
@@ -408,11 +410,11 @@ public class CliOptions {
 		this.docNumIndexLargeSimple = docNumIndexLargeSimple;
 	}
 
-	public Index[] getDocIndexObjects() {
+	public Collection<Index> getDocIndexObjects() {
 		return docIndexObjects;
 	}
 
-	public void setDocIndexObjects(final Index[] docIndexObjects) {
+	public void setDocIndexObjects(final Collection<Index> docIndexObjects) {
 		this.docIndexObjects = docIndexObjects;
 	}
 
@@ -424,11 +426,11 @@ public class CliOptions {
 		this.docNumIndexObjects = docNumIndexObjects;
 	}
 
-	public Index[] getDocIndexArrays() {
+	public Collection<Index> getDocIndexArrays() {
 		return docIndexArrays;
 	}
 
-	public void setDocIndexArrays(final Index[] docIndexArrays) {
+	public void setDocIndexArrays(final Collection<Index> docIndexArrays) {
 		this.docIndexArrays = docIndexArrays;
 	}
 

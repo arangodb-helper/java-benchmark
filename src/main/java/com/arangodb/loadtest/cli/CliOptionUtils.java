@@ -21,6 +21,8 @@
 package com.arangodb.loadtest.cli;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.CommandLine;
@@ -51,6 +53,10 @@ public class CliOptionUtils {
 					option.setDescription(String.format("%s. possible values: \"%s\"", option.getDescription(),
 						enumOptions((Enum<?>[]) field.getType().getEnumConstants())));
 				}
+				if (Collection.class.isAssignableFrom(field.getType()) && annotation.componentType().isEnum()) {
+					option.setDescription(String.format("%s. possible values: \"%s\"", option.getDescription(),
+						enumOptions((Enum<?>[]) annotation.componentType().getEnumConstants())));
+				}
 				if (!annotation.defaultValue().isEmpty()) {
 					option.setDescription(
 						String.format("%s (default: %s)", option.getDescription(), annotation.defaultValue()));
@@ -76,7 +82,7 @@ public class CliOptionUtils {
 				final String value = cmd.getOptionValue(field.getName(), defaultValue);
 				field.setAccessible(true);
 				if (!value.toString().isEmpty()) {
-					field.set(options, valueOf(value, field.getType()));
+					field.set(options, valueOf(value, field.getType(), annotation));
 				}
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
@@ -86,7 +92,7 @@ public class CliOptionUtils {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static <T> T valueOf(final Object value, final Class<T> type) {
+	private static <T> T valueOf(final Object value, final Class<T> type, final CliOptionInfo annotation) {
 		final Object t;
 		if (type == Integer.class) {
 			t = Integer.valueOf(value.toString());
@@ -96,6 +102,9 @@ public class CliOptionUtils {
 			t = Boolean.valueOf(value.toString());
 		} else if (type.isEnum()) {
 			t = Enum.valueOf((Class<? extends Enum>) type, value.toString().toUpperCase());
+		} else if (Collection.class.isAssignableFrom(type)) {
+			t = Stream.of(value.toString().split(",")).map(e -> valueOf(e, annotation.componentType(), annotation))
+					.collect(Collectors.toList());
 		} else {
 			t = type.cast(value);
 		}

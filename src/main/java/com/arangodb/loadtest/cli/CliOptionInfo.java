@@ -41,4 +41,6 @@ public @interface CliOptionInfo {
 
 	boolean required() default false;
 
+	Class<?> componentType() default Object.class;
+
 }

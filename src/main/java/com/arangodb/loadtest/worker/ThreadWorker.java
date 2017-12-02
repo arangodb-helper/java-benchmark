@@ -41,6 +41,10 @@ import com.arangodb.loadtest.util.KeyGen;
  */
 public class ThreadWorker extends Thread implements Closeable {
 
+	public static interface InstanceCreator {
+		ThreadWorker create(int num, Map<String, Collection<Long>> times);
+	}
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(ThreadWorker.class);
 	private final CliOptions options;
 	private final ArangoTestCase test;

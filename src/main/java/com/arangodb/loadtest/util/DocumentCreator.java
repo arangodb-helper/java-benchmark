@@ -40,6 +40,11 @@ import com.arangodb.loadtest.cli.CliOptions;
  */
 public class DocumentCreator {
 
+	public static final String FIELD_SIMPLE = "simple";
+	public static final String FIELD_LARGE = "large";
+	public static final String FIELD_ARRAY = "array";
+	public static final String FIELD_OBJECT = "object";
+
 	private final List<BaseDocument> cache;
 	private final CliOptions options;
 
@@ -53,25 +58,25 @@ public class DocumentCreator {
 	private void createSimple(final Map<String, Object> doc) {
 		final AtomicInteger i = new AtomicInteger(0);
 		Stream.generate(() -> createString(options.getDocSimpleSize())).limit(options.getDocNumSimple())
-				.forEach(s -> doc.put("simple" + i.getAndIncrement(), s));
+				.forEach(s -> doc.put(FIELD_SIMPLE + i.getAndIncrement(), s));
 	}
 
 	private void createLargeSimple(final Map<String, Object> doc) {
 		final AtomicInteger i = new AtomicInteger(0);
 		Stream.generate(() -> createString(options.getDocLargeSimpleSize())).limit(options.getDocNumLargeSimple())
-				.forEach(s -> doc.put("large" + i.getAndIncrement(), s));
+				.forEach(s -> doc.put(FIELD_LARGE + i.getAndIncrement(), s));
 	}
 
 	private void createArrays(final Map<String, Object> doc) {
 		final AtomicInteger i = new AtomicInteger(0);
 		Stream.generate(() -> createArray(options.getDocArraysSize())).limit(options.getDocNumArrays())
-				.forEach(a -> doc.put("array" + i.getAndIncrement(), a));
+				.forEach(a -> doc.put(FIELD_ARRAY + i.getAndIncrement(), a));
 	}
 
 	private void createObjects(final Map<String, Object> doc, final int depth) {
 		final AtomicInteger i = new AtomicInteger(0);
 		Stream.generate(() -> createObject(depth)).limit(options.getDocNumObjects())
-				.forEach(o -> doc.put("object" + i.getAndIncrement(), o));
+				.forEach(o -> doc.put(FIELD_OBJECT + i.getAndIncrement(), o));
 	}
 
 	private Map<String, Object> createObject(final int depth) {
