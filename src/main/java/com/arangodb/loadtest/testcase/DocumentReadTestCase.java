@@ -18,63 +18,70 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.loadtest;
+package com.arangodb.loadtest.testcase;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDBException;
-import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.MultiDocumentEntity;
+import com.arangodb.loadtest.cli.CliOptions;
+import com.arangodb.loadtest.util.KeyGen;
+import com.arangodb.loadtest.util.Stopwatch;
 
 /**
  * 
  * @author Mark Vollmary
  *
  */
-public class DocumentReader {
+public class DocumentReadTestCase implements ArangoTestCase {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(DocumentReader.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(DocumentReadTestCase.class);
 
 	private final ArangoDB arango;
-	private final String collectionName;
+	private final ArangoCollection collection;
 	private final String id;
-	private final ArangoDatabase db;
-	private final String keyPrefix;
-	private int keySuffix = 0;
 	private final boolean log;
 	private final ArrayList<Long> times;
 
-	public DocumentReader(final ArangoDB.Builder builder, final String databaseName, final String collectionName,
-		final int num, final boolean log, final ArrayList<Long> times, final String keyPrefix) {
-		this.log = log;
+	private final CliOptions options;
+	private final KeyGen keyGen;
+
+	public DocumentReadTestCase(final ArangoDB.Builder builder, final CliOptions options, final KeyGen keyGen,
+		final int num, final ArrayList<Long> times) {
+		this.options = options;
+		this.keyGen = keyGen;
+		this.log = false;
 		this.times = times;
-		this.keyPrefix = keyPrefix;
 		arango = builder.build();
-		db = arango.db(databaseName);
-		this.collectionName = collectionName;
+		collection = arango.db(options.getDatabase()).collection(options.getCollection());
 		this.id = (new Integer(num)).toString();
 	}
 
-	public void read(final int batchSize) throws ArangoDBException {
-		final List<String> keys = new ArrayList<>(batchSize);
-		for (int i = 0; i < batchSize; i++) {
-			keys.add(keyPrefix + id + "-" + keySuffix++);
-		}
+	@Override
+	public void close() throws IOException {
+		arango.shutdown();
+	}
+
+	@Override
+	public void run() throws ArangoDBException {
+		final Integer batchSize = options.getBatchSize();
+		final List<String> keys = keyGen.generateKeys(batchSize);
 		final Stopwatch sw = new Stopwatch();
 		if (batchSize == 1) {
-			final BaseDocument doc = db.collection(collectionName).getDocument(keys.get(0), BaseDocument.class);
+			final BaseDocument doc = collection.getDocument(keys.get(0), BaseDocument.class);
 			if (doc == null) {
 				throw new ArangoDBException(String.format("Failed to read document with key: %s", keys.get(0)));
 			}
 		} else {
-			final MultiDocumentEntity<BaseDocument> documents = db.collection(collectionName).getDocuments(keys,
-				BaseDocument.class);
+			final MultiDocumentEntity<BaseDocument> documents = collection.getDocuments(keys, BaseDocument.class);
 			final int numDocs = documents.getDocuments().size();
 			if (numDocs != batchSize) {
 				throw new ArangoDBException(String.format("Failed to read all documents. %s / %s documents successful",

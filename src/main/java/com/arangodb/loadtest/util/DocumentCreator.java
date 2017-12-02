@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.loadtest;
+package com.arangodb.loadtest.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import com.arangodb.entity.BaseDocument;
+import com.arangodb.loadtest.cli.CliOptions;
 
 /**
  * @author Mark Vollmary
@@ -35,33 +36,15 @@ import com.arangodb.entity.BaseDocument;
  */
 public class DocumentCreator {
 
-	public static class Builder {
-
-		private final int numberOfFields;
-		private final int fieldSize;
-		private final int batchSize;
-
-		public Builder(final int numberOfFields, final int fieldSize, final int batchSize) {
-			super();
-			this.numberOfFields = numberOfFields;
-			this.fieldSize = fieldSize;
-			this.batchSize = batchSize;
-		}
-
-		public DocumentCreator build() {
-			return new DocumentCreator(numberOfFields, fieldSize, batchSize);
-		}
-	}
-
 	private final List<BaseDocument> cache;
 
-	private DocumentCreator(final int numberOfFields, final int fieldSize, final int batchSize) {
+	public DocumentCreator(final CliOptions options) {
 		super();
 		cache = new ArrayList<>();
-		for (int j = 0; j < batchSize; j++) {
+		for (int j = 0; j < options.getBatchSize(); j++) {
 			final BaseDocument doc = new BaseDocument();
-			for (int i = 0; i < numberOfFields; i++) {
-				doc.addAttribute("field" + i, RandomStringUtils.random(fieldSize, false, true));
+			for (int i = 0; i < options.getDocSize(); i++) {
+				doc.addAttribute("field" + i, RandomStringUtils.random(options.getDocFieldSize(), false, true));
 			}
 			cache.add(doc);
 		}

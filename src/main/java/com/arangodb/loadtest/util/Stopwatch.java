@@ -18,7 +18,7 @@
  * Copyright holder is ArangoDB GmbH, Cologne, Germany
  */
 
-package com.arangodb.loadtest;
+package com.arangodb.loadtest.util;
 
 /**
  * 
