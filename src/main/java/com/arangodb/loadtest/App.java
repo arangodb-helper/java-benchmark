@@ -192,6 +192,8 @@ public class App {
 		final int batchSize = options.getBatchSize();
 		int currentOp = 0;
 		final int sleep = options.getOutputInterval() * 1000;
+		out.println(
+			"elapsed time (sec), threads, requests, batch, latency average (ms), latency min (ms), latency max (ms), latency 50th (ms), latency 95th (ms), latency 99th (ms)");
 		while (currentOp < options.getRequests()) {
 			try {
 				Thread.sleep(sleep);
@@ -214,10 +216,9 @@ public class App {
 			} else {
 				average = min = max = p50th = p95th = p99th = 0L;
 			}
-			out.println(String.format(
-				"Within the last %s sec: Threads %s, %s requests %s, Documents %s, Latency[Average: %s ms, Min: %s ms, Max: %s ms, 50th: %s ms, 95th: %s ms, 99th: %s ms]",
-				sleep / 1000, numThreads, type, numRequests, numRequests * batchSize, average, min, max, p50th, p95th,
-				p99th));
+			final Number[] d = new Number[] { sleep / 1000, numThreads, numRequests, numRequests * batchSize, average,
+					min, max, p50th, p95th, p99th };
+			out.println(Stream.of(d).map(n -> n.toString()).reduce((a, b) -> a + ", " + b).get());
 		}
 	}
 
