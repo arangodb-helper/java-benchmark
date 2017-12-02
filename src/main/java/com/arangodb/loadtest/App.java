@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.BasicParser;
@@ -49,6 +48,7 @@ import com.arangodb.loadtest.testcase.DocumentReadTestCase;
 import com.arangodb.loadtest.testcase.DocumentReplaceTestCase;
 import com.arangodb.loadtest.testcase.DocumentUpdateTestCase;
 import com.arangodb.loadtest.testcase.GetVersionTestCase;
+import com.arangodb.loadtest.testcase.TestCase;
 import com.arangodb.loadtest.util.DatabaseSetupUtils;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.worker.ThreadWorker;
@@ -60,10 +60,6 @@ import com.arangodb.loadtest.worker.ThreadWorker.InstanceCreator;
  *
  */
 public class App {
-
-	enum TestCase {
-		VERSION, DOCUMENT_GET, DOCUMENT_INSERT, DOCUMENT_IMPORT, DOCUMENT_UPDATE, DOCUMENT_REPLACE
-	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 	private static final String USAGE_INFO = "java -jar arangodb-load-test.jar";
@@ -91,14 +87,11 @@ public class App {
 		Stream.of(options.getEndpoints().split(",")).map(e -> e.split(":")).filter(e -> e.length == 2)
 				.forEach(e -> builder.host(e[0], Integer.valueOf(e[1])));
 		try {
-			final String caseString = options.getTest();
-			if (caseString == null) {
+			final Collection<TestCase> tests = options.getTest();
+			if (tests == null) {
 				new HelpFormatter().printHelp(USAGE_INFO, opts);
 				System.exit(1);
 			}
-
-			final List<TestCase> tests = Stream.of(caseString.split(",")).map(t -> TestCase.valueOf(t.toUpperCase()))
-					.collect(Collectors.toList());
 			run(app, options, builder, tests, System.out);
 		} catch (final Exception e) {
 			LOGGER.error("Failed", e);
@@ -109,7 +102,7 @@ public class App {
 		final App app,
 		final CliOptions options,
 		final ArangoDB.Builder builder,
-		final List<TestCase> tests,
+		final Collection<TestCase> tests,
 		final PrintStream out) throws InterruptedException, IOException {
 		for (int i = 0; i < options.getRuns(); i++) {
 			final Integer delay = options.getDelay();

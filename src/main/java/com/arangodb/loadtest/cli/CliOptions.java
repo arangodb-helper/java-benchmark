@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import com.arangodb.Protocol;
 import com.arangodb.entity.LoadBalancingStrategy;
+import com.arangodb.loadtest.testcase.TestCase;
 
 /**
  * @author Mark Vollmary
@@ -31,8 +32,8 @@ import com.arangodb.entity.LoadBalancingStrategy;
  */
 public class CliOptions {
 
-	@CliOptionInfo(description = "comma separeted list of test cases to use. possible values: \"document_get\", \"document_insert\", \"version\"", opt = "t", required = true)
-	private String test;
+	@CliOptionInfo(description = "comma separeted list of test cases to use", opt = "t", required = true, componentType = TestCase.class)
+	private Collection<TestCase> test;
 
 	@CliOptionInfo(description = "number of operations per thread", defaultValue = "1000")
 	private Integer requests;
@@ -146,11 +147,11 @@ public class CliOptions {
 		super();
 	}
 
-	public String getTest() {
+	public Collection<TestCase> getTest() {
 		return test;
 	}
 
-	public void setTest(final String test) {
+	public void setTest(final Collection<TestCase> test) {
 		this.test = test;
 	}
 
