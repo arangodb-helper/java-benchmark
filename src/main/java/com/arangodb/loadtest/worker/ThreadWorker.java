@@ -20,6 +20,7 @@
 
 package com.arangodb.loadtest.worker;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoDB;
 import com.arangodb.loadtest.cli.CliOptions;
-import com.arangodb.loadtest.testcase.DocumentWriteTestCase;
+import com.arangodb.loadtest.testcase.ArangoTestCase;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.util.KeyGen;
 
@@ -38,33 +39,36 @@ import com.arangodb.loadtest.util.KeyGen;
  * @author Mark Vollmary
  *
  */
-public class DocumentWriteWorker extends ArangoThreadWorker {
+public class ThreadWorker extends Thread implements Closeable {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DocumentWriteWorker.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ThreadWorker.class);
+	private final CliOptions options;
+	private final ArangoTestCase test;
 
-	private final DocumentWriteTestCase writer;
-
-	public DocumentWriteWorker(final ArangoDB.Builder builder, final CliOptions options, final int num,
-		final Map<String, Collection<Long>> times, final DocumentCreator documentCreator) {
-		super(options);
+	public ThreadWorker(final ArangoDB.Builder builder, final CliOptions options, final int num,
+		final Map<String, Collection<Long>> times, final ArangoTestCase.InstanceCreator instanceCreator,
+		final DocumentCreator documentCreator) {
+		super();
+		this.options = options;
 		final ArrayList<Long> l = new ArrayList<>();
 		times.put("thread" + num, l);
-		this.writer = new DocumentWriteTestCase(builder, options, new KeyGen(options, num), documentCreator, num, l);
+		test = instanceCreator.create(builder, options, new KeyGen(options, num), documentCreator, num, l);
 	}
 
 	@Override
 	public void run() {
 		try {
 			for (int i = 0; i < options.getRequests(); i++) {
-				writer.run();
+				test.run();
 			}
 		} catch (final Exception e) {
-			LOGGER.error("Failed to upload documents", e);
+			LOGGER.error("Failed to download documents", e);
 		}
 	}
 
 	@Override
 	public void close() throws IOException {
-		writer.close();
+		test.close();
 	}
+
 }

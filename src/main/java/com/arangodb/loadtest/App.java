@@ -45,10 +45,10 @@ import com.arangodb.ArangoDB.Builder;
 import com.arangodb.ArangoDBException;
 import com.arangodb.loadtest.cli.CliOptionUtils;
 import com.arangodb.loadtest.cli.CliOptions;
+import com.arangodb.loadtest.testcase.DocumentReadTestCase;
+import com.arangodb.loadtest.testcase.DocumentWriteTestCase;
 import com.arangodb.loadtest.util.DocumentCreator;
-import com.arangodb.loadtest.worker.ArangoThreadWorker;
-import com.arangodb.loadtest.worker.DocumentReadWorker;
-import com.arangodb.loadtest.worker.DocumentWriteWorker;
+import com.arangodb.loadtest.worker.ThreadWorker;
 import com.arangodb.model.CollectionCreateOptions;
 
 /**
@@ -111,23 +111,29 @@ public class App {
 		for (int i = 0; i < options.getRuns(); i++) {
 			final Integer delay = options.getDelay();
 			if (i > 0 && delay > 0) {
-				out.println(String.format("SLEEP %s seconds till next run", delay));
+				out.println(String.format("## SLEEP %s seconds till next run", delay));
 				try {
 					Thread.sleep(delay * 1000);
 				} catch (final InterruptedException e) {
 				}
 			}
-			out.println("RUN " + (i + 1));
+			out.println("# RUN " + (i + 1));
 			final boolean dropDB = (options.getDropDB() != null && options.getDropDB().booleanValue()) || i > 0;
 			app.setup(builder, options, dropDB);
 			for (final TestCase test : tests) {
+				final ThreadWorkerCreator creator;
 				if (test == TestCase.READ) {
-					app.run(options, test, (num, times) -> new DocumentReadWorker(builder, options, num, times), out);
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, k, d, n, t) -> new DocumentReadTestCase(b, o, k, n, t),
+							new DocumentCreator(options));
 				} else if (test == TestCase.WRITE) {
-					app.run(options, test, (num, times) -> new DocumentWriteWorker(builder, options, num, times,
-							new DocumentCreator(options)),
-						out);
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, k, d, n, t) -> new DocumentWriteTestCase(b, o, k, d, n, t),
+							new DocumentCreator(options));
+				} else {
+					continue;
 				}
+				app.run(options, test, creator, out);
 			}
 		}
 	}
@@ -162,7 +168,7 @@ public class App {
 	}
 
 	public interface ThreadWorkerCreator {
-		ArangoThreadWorker create(int num, Map<String, Collection<Long>> times);
+		ThreadWorker create(int num, Map<String, Collection<Long>> times);
 	}
 
 	private void run(
@@ -170,12 +176,12 @@ public class App {
 		final TestCase testCase,
 		final ThreadWorkerCreator creator,
 		final PrintStream out) throws InterruptedException, IOException {
-		out.println(String.format("TEST CASE \"%s\". %s threads, %s connections/thread, %s protocol",
+		out.println(String.format("## TEST CASE \"%s\". %s threads, %s connections/thread, %s protocol",
 			testCase.toString().toLowerCase(), options.getThreads(), options.getConnections(),
 			options.getProtocol().toString().toLowerCase()));
 
 		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
-		final ArangoThreadWorker[] workers = new ArangoThreadWorker[options.getThreads()];
+		final ThreadWorker[] workers = new ThreadWorker[options.getThreads()];
 		for (int i = 0; i < workers.length; i++) {
 			workers[i] = creator.create(i, times);
 		}

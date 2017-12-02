@@ -21,14 +21,29 @@
 package com.arangodb.loadtest.testcase;
 
 import java.io.Closeable;
+import java.util.Collection;
 
+import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDBException;
+import com.arangodb.loadtest.cli.CliOptions;
+import com.arangodb.loadtest.util.DocumentCreator;
+import com.arangodb.loadtest.util.KeyGen;
 
 /**
  * @author Mark Vollmary
  *
  */
 public interface ArangoTestCase extends Closeable {
+
+	public static interface InstanceCreator {
+		ArangoTestCase create(
+			ArangoDB.Builder builder,
+			CliOptions options,
+			KeyGen keyGen,
+			DocumentCreator documentCreator,
+			int num,
+			Collection<Long> times);
+	}
 
 	void run() throws ArangoDBException;
 

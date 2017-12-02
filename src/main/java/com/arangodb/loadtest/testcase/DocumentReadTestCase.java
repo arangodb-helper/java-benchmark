@@ -21,7 +21,7 @@
 package com.arangodb.loadtest.testcase;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -49,13 +49,13 @@ public class DocumentReadTestCase implements ArangoTestCase {
 	private final ArangoCollection collection;
 	private final String id;
 	private final boolean log;
-	private final ArrayList<Long> times;
+	private final Collection<Long> times;
 
 	private final CliOptions options;
 	private final KeyGen keyGen;
 
 	public DocumentReadTestCase(final ArangoDB.Builder builder, final CliOptions options, final KeyGen keyGen,
-		final int num, final ArrayList<Long> times) {
+		final int num, final Collection<Long> times) {
 		this.options = options;
 		this.keyGen = keyGen;
 		this.log = false;
