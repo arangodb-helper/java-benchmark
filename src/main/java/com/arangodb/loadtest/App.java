@@ -114,7 +114,7 @@ public class App {
 				}
 			}
 			out.println("# RUN " + (i + 1));
-			final boolean dropDB = (options.getDropDB() != null && options.getDropDB().booleanValue()) || i > 0;
+			final boolean dropDB = options.getDropDB() != null && options.getDropDB().booleanValue();
 			DatabaseSetupUtils.setup(builder, options, dropDB);
 			for (final TestCase test : tests) {
 				final InstanceCreator creator;
