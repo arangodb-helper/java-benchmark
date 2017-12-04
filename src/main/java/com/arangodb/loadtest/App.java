@@ -192,7 +192,7 @@ public class App {
 		final int batchSize = options.getBatchSize();
 		final int sleep = options.getOutputInterval() * 1000;
 		out.println(
-			"elapsed time (sec), threads, requests, batch, latency average (ms), latency min (ms), latency max (ms), latency 50th (ms), latency 95th (ms), latency 99th (ms)");
+			"elapsed time (sec), threads, requests, documents, latency average (ms), latency min (ms), latency max (ms), latency 50th (ms), latency 95th (ms), latency 99th (ms)");
 		boolean alive = true;
 		while (alive) {
 			try {
