@@ -172,7 +172,7 @@ public class App {
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
 		}
-		collectData(options, times, testCase.toString().toLowerCase(), out);
+		collectData(options, times, testCase.toString().toLowerCase(), out, workers);
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].join();
 		}
@@ -185,22 +185,23 @@ public class App {
 		final CliOptions options,
 		final Map<String, Collection<Long>> times,
 		final String type,
-		final PrintStream out) {
+		final PrintStream out,
+		final ThreadWorker[] workers) {
 		final Integer numThreads = options.getThreads();
 		final int batchSize = options.getBatchSize();
-		int currentOp = 0;
 		final int sleep = options.getOutputInterval() * 1000;
 		out.println(
 			"elapsed time (sec), threads, requests, batch, latency average (ms), latency min (ms), latency max (ms), latency 50th (ms), latency 95th (ms), latency 99th (ms)");
-		while (currentOp < options.getRequests()) {
+		boolean alive = true;
+		while (alive) {
 			try {
 				Thread.sleep(sleep);
 			} catch (final InterruptedException e) {
 			}
+			alive = Stream.of(workers).filter(worker -> worker.isAlive()).count() > 0;
 			final List<Long> requests = new ArrayList<>();
 			times.values().forEach(requests::addAll);
 			times.values().forEach(Collection::clear);
-			currentOp += requests.size();
 			Collections.sort(requests);
 			final int numRequests = requests.size();
 			final Double average, min, max, p50th, p95th, p99th;
