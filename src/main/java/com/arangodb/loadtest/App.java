@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.BasicParser;
@@ -104,48 +105,48 @@ public class App {
 		final ArangoDB.Builder builder,
 		final Collection<TestCase> tests,
 		final PrintStream out) throws InterruptedException, IOException {
-		for (int i = 0; i < options.getRuns(); i++) {
+		final boolean dropDB = options.getDropDB() != null && options.getDropDB().booleanValue();
+		DatabaseSetupUtils.setup(builder, options, dropDB);
+		for (final AtomicInteger i = new AtomicInteger(0); i.get() < options.getRuns(); i.incrementAndGet()) {
 			final Integer delay = options.getDelay();
-			if (i > 0 && delay > 0) {
+			if (i.get() > 0 && delay > 0) {
 				out.println(String.format("## SLEEP %s seconds till next run", delay));
 				try {
 					Thread.sleep(delay * 1000);
 				} catch (final InterruptedException e) {
 				}
 			}
-			out.println("# RUN " + (i + 1));
-			final boolean dropDB = options.getDropDB() != null && options.getDropDB().booleanValue();
-			DatabaseSetupUtils.setup(builder, options, dropDB);
+			out.println("# RUN " + (i.get() + 1));
 			for (final TestCase test : tests) {
 				final InstanceCreator creator;
 				switch (test) {
 				case VERSION:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
-							(b, o, n, t, k, d) -> new GetVersionTestCase(b, o, n, t), null);
+							(b, o, n, t, k, d) -> new GetVersionTestCase(b, o, n, t), null, i.get());
 					break;
 				case DOCUMENT_GET:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
-							(b, o, n, t, k, d) -> new DocumentReadTestCase(b, o, n, t, k), null);
+							(b, o, n, t, k, d) -> new DocumentReadTestCase(b, o, n, t, k), null, i.get());
 					break;
 				case DOCUMENT_INSERT:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, n, t, k, d) -> new DocumentInsertTestCase(b, o, n, t, k, d),
-							new DocumentCreator(options));
+							new DocumentCreator(options), i.get());
 					break;
 				case DOCUMENT_IMPORT:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, n, t, k, d) -> new DocumentImportTestCase(b, o, n, t, k, d),
-							new DocumentCreator(options));
+							new DocumentCreator(options), i.get());
 					break;
 				case DOCUMENT_UPDATE:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, n, t, k, d) -> new DocumentUpdateTestCase(b, o, n, t, k, d),
-							new DocumentCreator(options));
+							new DocumentCreator(options), i.get());
 					break;
 				case DOCUMENT_REPLACE:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, n, t, k, d) -> new DocumentReplaceTestCase(b, o, n, t, k, d),
-							new DocumentCreator(options));
+							new DocumentCreator(options), i.get());
 					break;
 				default:
 					continue;

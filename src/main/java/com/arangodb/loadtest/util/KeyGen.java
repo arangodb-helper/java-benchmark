@@ -33,11 +33,13 @@ public class KeyGen {
 
 	private final int num;
 	private final String keyPrefix;
+	private final int run;
 	private int index;
 
-	public KeyGen(final CliOptions options, final int num) {
+	public KeyGen(final CliOptions options, final int num, final int run) {
 		super();
 		this.num = num;
+		this.run = run;
 		keyPrefix = options.getKeyPrefix();
 		index = 0;
 	}
@@ -47,9 +49,9 @@ public class KeyGen {
 		for (int i = 0; i < quantity; i++) {
 			final String key;
 			if (keyPrefix != null) {
-				key = String.format("%s-%s-%s", keyPrefix, num, index++);
+				key = String.format("%s-%s-%s-%s", keyPrefix, run, num, index++);
 			} else {
-				key = String.format("%s-%s", num, index++);
+				key = String.format("%s-%s-%s", run, num, index++);
 			}
 			keys.add(key);
 		}

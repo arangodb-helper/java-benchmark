@@ -51,12 +51,12 @@ public class ThreadWorker extends Thread implements Closeable {
 
 	public ThreadWorker(final ArangoDB.Builder builder, final CliOptions options, final int num,
 		final Map<String, Collection<Long>> times, final ArangoTestCase.InstanceCreator instanceCreator,
-		final DocumentCreator documentCreator) {
+		final DocumentCreator documentCreator, final int run) {
 		super();
 		this.options = options;
 		final ArrayList<Long> l = new ArrayList<>();
 		times.put("thread" + num, l);
-		test = instanceCreator.create(builder, options, num, l, new KeyGen(options, num), documentCreator);
+		test = instanceCreator.create(builder, options, num, l, new KeyGen(options, num, run), documentCreator);
 	}
 
 	@Override
