@@ -22,6 +22,7 @@ package com.arangodb.loadtest;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,6 +31,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -65,7 +70,7 @@ public class App {
 	private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 	private static final String USAGE_INFO = "java -jar arangodb-load-test.jar";
 
-	public static void main(final String[] args) {
+	public static void main(final String[] args) throws Exception {
 		final App app = new App();
 		final CommandLineParser parser = new BasicParser();
 		final Options opts = CliOptionUtils.createOptions();
@@ -83,7 +88,11 @@ public class App {
 		final ArangoDB.Builder builder = new ArangoDB.Builder().useProtocol(options.getProtocol())
 				.user(options.getUser()).password(options.getPassword())
 				.loadBalancingStrategy(options.getLoadBalancing()).acquireHostList(options.getAcquireHostList())
-				.maxConnections(options.getConnections());
+				.maxConnections(options.getConnections()).useSsl(options.getSsl());
+
+		if (options.getSsl()) {
+			builder.sslContext(createSslContext());
+		}
 
 		Stream.of(options.getEndpoints().split(",")).map(e -> e.split(":")).filter(e -> e.length == 2)
 				.forEach(e -> builder.host(e[0], Integer.valueOf(e[1])));
@@ -97,6 +106,23 @@ public class App {
 		} catch (final Exception e) {
 			LOGGER.error("Failed", e);
 		}
+	}
+
+	private static SSLContext createSslContext() throws Exception {
+		final String SSL_TRUSTSTORE = "/example.truststore";
+		final String SSL_TRUSTSTORE_PASSWORD = "12345678";
+		final KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+		ks.load(App.class.getResourceAsStream(SSL_TRUSTSTORE), SSL_TRUSTSTORE_PASSWORD.toCharArray());
+
+		final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+		kmf.init(ks, SSL_TRUSTSTORE_PASSWORD.toCharArray());
+
+		final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		tmf.init(ks);
+
+		final SSLContext sc = SSLContext.getInstance("TLS");
+		sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+		return sc;
 	}
 
 	private static void run(

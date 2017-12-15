@@ -62,6 +62,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "network protocol to use", defaultValue = "vst")
 	private Protocol protocol;
 
+	@CliOptionInfo(description = "use SSL", defaultValue = "false")
+	private Boolean ssl;
+
 	@CliOptionInfo(description = "load balancing strategy to use (for cluster setup)", defaultValue = "none")
 	private LoadBalancingStrategy loadBalancing;
 
@@ -217,6 +220,14 @@ public class CliOptions {
 
 	public void setThreads(final Integer threads) {
 		this.threads = threads;
+	}
+
+	public Boolean getSsl() {
+		return ssl;
+	}
+
+	public void setSsl(final Boolean ssl) {
+		this.ssl = ssl;
 	}
 
 	public Protocol getProtocol() {
