@@ -62,7 +62,9 @@ public class DatabaseSetupUtils {
 				arangoDB.db(database).drop();
 			} catch (final ArangoDBException e) {
 			}
-		}
+		} else {
+                  return;
+                }
 		try {
 			arangoDB.createDatabase(database);
 		} catch (final ArangoDBException e) {
