@@ -90,9 +90,9 @@ public class App {
 				.loadBalancingStrategy(options.getLoadBalancing()).acquireHostList(options.getAcquireHostList())
 				.maxConnections(options.getConnections()).useSsl(options.getSsl());
 
-		// if (options.getSsl()) {
-		// builder.sslContext(createSslContext());
-		// }
+		if (options.getSsl()) {
+			builder.sslContext(createSslContext());
+		}
 
 		Stream.of(options.getEndpoints().split(",")).map(e -> e.split(":")).filter(e -> e.length == 2)
 				.forEach(e -> builder.host(e[0], Integer.valueOf(e[1])));
