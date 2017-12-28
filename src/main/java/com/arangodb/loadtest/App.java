@@ -25,11 +25,11 @@ import java.io.PrintStream;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -226,13 +226,13 @@ public class App {
 			} catch (final InterruptedException e) {
 			}
 			alive = Stream.of(workers).filter(worker -> worker.isAlive()).count() > 0;
-			final List<Long> requests = new ArrayList<>();
+			List<Long> requests = new ArrayList<>();
 			times.values().forEach(requests::addAll);
 			times.values().forEach(Collection::clear);
 			final int numRequests = requests.size();
 			final Double average, min, max, p50th, p95th, p99th;
 			if (numRequests > 0) {
-				Collections.sort(requests);
+				requests = requests.stream().filter(i -> i != null).sorted().collect(Collectors.toList());
 				average = toMs(requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L));
 				min = toMs(requests.get(0));
 				max = toMs(requests.get(numRequests - 1));
