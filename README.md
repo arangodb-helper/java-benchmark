@@ -50,6 +50,8 @@ java -jar arangodb-java-benchmark.jar --test document_insert
     --docNumSimple <Integer>                  number of String fields in the documents (default: 5)
     --docSimpleSize <Integer>                 size of String fields in the documents (default: 20)
     --dropDB <Boolean>                        drop DB before run (default: false)
+    --duration <Integer>                      number of seconds the test should run
+                                              (if > 0 the option 'requests' is ignored) (default: 0)
  -e,--endpoints <String>                      comma separated list of endpoints to connect to
                                               (default: 127.0.0.1:8529)
     --keyPrefix <String>                      document key prefix (necessary only when run multiple times)

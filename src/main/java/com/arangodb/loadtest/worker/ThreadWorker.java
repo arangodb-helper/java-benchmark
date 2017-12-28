@@ -34,6 +34,7 @@ import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.testcase.ArangoTestCase;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.util.KeyGen;
+import com.arangodb.loadtest.util.Stopwatch;
 
 /**
  * @author Mark Vollmary
@@ -62,11 +63,19 @@ public class ThreadWorker extends Thread implements Closeable {
 	@Override
 	public void run() {
 		try {
-			for (int i = 0; i < options.getRequests(); i++) {
-				test.run();
+			if (options.getDuration() > 0) {
+				final Integer duration = options.getDuration();
+				final Stopwatch sw = new Stopwatch();
+				while ((sw.getElapsedTime() / 1000 / 1000 / 1000) < duration) {
+					test.run();
+				}
+			} else {
+				for (int i = 0; i < options.getRequests(); i++) {
+					test.run();
+				}
 			}
 		} catch (final Exception e) {
-			LOGGER.error("Failed to download documents", e);
+			LOGGER.error("Failed to execute request", e);
 		}
 	}
 

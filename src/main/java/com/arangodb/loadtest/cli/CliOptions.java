@@ -38,6 +38,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "number of operations per thread", defaultValue = "1000")
 	private Integer requests;
 
+	@CliOptionInfo(description = "number of seconds the test should run (if > 0 the option 'requests' is ignored)", defaultValue = "0")
+	private Integer duration;
+
 	@CliOptionInfo(description = "run test n times. drop database between runs", defaultValue = "1")
 	private Integer runs;
 
@@ -164,6 +167,14 @@ public class CliOptions {
 
 	public void setRequests(final Integer requests) {
 		this.requests = requests;
+	}
+
+	public Integer getDuration() {
+		return duration;
+	}
+
+	public void setDuration(final Integer duration) {
+		this.duration = duration;
 	}
 
 	public Integer getRuns() {
