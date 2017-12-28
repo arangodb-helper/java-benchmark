@@ -229,10 +229,10 @@ public class App {
 			final List<Long> requests = new ArrayList<>();
 			times.values().forEach(requests::addAll);
 			times.values().forEach(Collection::clear);
-			Collections.sort(requests);
 			final int numRequests = requests.size();
 			final Double average, min, max, p50th, p95th, p99th;
 			if (numRequests > 0) {
+				Collections.sort(requests);
 				average = toMs(requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L));
 				min = toMs(requests.get(0));
 				max = toMs(requests.get(numRequests - 1));
