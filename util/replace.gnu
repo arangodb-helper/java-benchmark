@@ -2,7 +2,7 @@ set lmargin at screen 0.20
 set rmargin at screen 0.75
 set bmargin at screen 0.30
 set tmargin at screen 0.85
-set datafile separator " "
+set datafile separator ","
 set autoscale fix
 set key outside right center
 set title "requests"

@@ -226,7 +226,7 @@ public class App {
 		int numberOfRuns = 0;
 		double totalDocuments = 0.0;
 		out.println(
-			"elapsed time (sec), threads, requests, documents, throughput, latency average (ms), latency min (ms), latency max (ms), latency 50th (ms), latency 95th (ms), latency 99th (ms)");
+			"elapsed time (sec),threads,requests,documents,throughput,latency average (ms),latency min (ms),latency max (ms),latency 50th (ms),latency 95th (ms),latency 99th (ms)");
 		boolean alive = true;
 		while (alive) {
 			try {
@@ -256,7 +256,7 @@ public class App {
 			double throughput = totalDocuments / (numberOfRuns * (sleep / 1000));
 			final Number[] d = new Number[] { numberOfRuns * (sleep / 1000), numThreads, numRequests, numRequests * batchSize, throughput, average,
 					min, max, p50th, p95th, p99th };
-			out.println(Stream.of(d).map(n -> n.toString()).reduce((a, b) -> a + ", " + b).get());
+			out.println(Stream.of(d).map(n -> n.toString()).reduce((a, b) -> a + "," + b).get());
 		}
 	}
 
