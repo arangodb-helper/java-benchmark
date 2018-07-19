@@ -136,13 +136,17 @@ public class App {
 		for (final AtomicInteger i = new AtomicInteger(0); i.get() < options.getRuns(); i.incrementAndGet()) {
 			final Integer delay = options.getDelay();
 			if (i.get() > 0 && delay > 0) {
-				out.println(String.format("## SLEEP %s seconds till next run", delay));
+				if (options.getVerbose()) {
+					out.println(String.format("## SLEEP %s seconds till next run", delay));
+				}
 				try {
 					Thread.sleep(delay * 1000);
 				} catch (final InterruptedException e) {
 				}
 			}
-			out.println("# RUN " + (i.get() + 1));
+			if (options.getVerbose()) {
+				out.println("# RUN " + (i.get() + 1));
+			}
 			for (final TestCase test : tests) {
 				final InstanceCreator creator;
 				switch (test) {
@@ -187,9 +191,11 @@ public class App {
 		final TestCase testCase,
 		final InstanceCreator creator,
 		final PrintStream out) throws InterruptedException, IOException {
-		out.println(String.format("## TEST CASE \"%s\". %s threads, %s connections/thread, %s protocol",
-			testCase.toString().toLowerCase(), options.getThreads(), options.getConnections(),
-			options.getProtocol().toString().toLowerCase()));
+		if (options.getVerbose()) {
+			out.println(String.format("## TEST CASE \"%s\". %s threads, %s connections/thread, %s protocol",
+				testCase.toString().toLowerCase(), options.getThreads(), options.getConnections(),
+				options.getProtocol().toString().toLowerCase()));
+		}
 
 		final Map<String, Collection<Long>> times = new ConcurrentHashMap<>();
 		final ThreadWorker[] workers = new ThreadWorker[options.getThreads()];
