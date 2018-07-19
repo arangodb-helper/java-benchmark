@@ -5,9 +5,10 @@ set tmargin at screen 0.85
 set datafile separator " "
 set autoscale fix
 set key outside right center
-set title "hunde"
+set title "requests"
 set xlabel "seconds"
 set ylabel "requests"
+set key autotitle columnhead
 set terminal png
 set output "insert-request.png"
-plot "insert.csv" using 4:xticlabels(stringcolumn(1)) title "REQUESTS" with line
+plot for [n=4:5] "insert.csv" using n:xticlabels(stringcolumn(1)) with lines

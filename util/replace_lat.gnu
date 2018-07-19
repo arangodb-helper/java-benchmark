@@ -11,4 +11,4 @@ set ylabel "ms"
 set key autotitle columnhead
 set terminal png
 set output "replace-latency.png"
-plot for [n=5:10] "replace.csv" using n:xticlabels(stringcolumn(1)) with lines
+plot for [n=6:11] "replace.csv" using n:xticlabels(stringcolumn(1)) with lines

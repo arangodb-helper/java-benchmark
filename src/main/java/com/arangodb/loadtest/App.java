@@ -223,14 +223,17 @@ public class App {
 		final Integer numThreads = options.getThreads();
 		final int batchSize = options.getBatchSize();
 		final int sleep = options.getOutputInterval() * 1000;
+		int numberOfRuns = 0;
+		double totalDocuments = 0.0;
 		out.println(
-			"elapsed time (sec), threads, requests, documents, latency average (ms), latency min (ms), latency max (ms), latency 50th (ms), latency 95th (ms), latency 99th (ms)");
+			"elapsed time (sec), threads, requests, documents, throughput, latency average (ms), latency min (ms), latency max (ms), latency 50th (ms), latency 95th (ms), latency 99th (ms)");
 		boolean alive = true;
 		while (alive) {
 			try {
 				Thread.sleep(sleep);
 			} catch (final InterruptedException e) {
 			}
+			++numberOfRuns;
 			alive = Stream.of(workers).filter(worker -> worker.isAlive()).count() > 0;
 			List<Long> requests = new ArrayList<>();
 			times.values().forEach(requests::addAll);
@@ -239,6 +242,7 @@ public class App {
 			final int numRequests = requests.size();
 			final Double average, min, max, p50th, p95th, p99th;
 			if (numRequests > 0) {
+				totalDocuments += numRequests * batchSize;
 				average = toMs(requests.stream().reduce((a, b) -> a + b).map(e -> e / numRequests).orElse(0L));
 				min = toMs(requests.get(0));
 				max = toMs(requests.get(numRequests - 1));
@@ -248,7 +252,9 @@ public class App {
 			} else {
 				average = min = max = p50th = p95th = p99th = 0.;
 			}
-			final Number[] d = new Number[] { sleep / 1000, numThreads, numRequests, numRequests * batchSize, average,
+			// NumberOfRuns > 0 and sleep > 0 
+			double throughput = totalDocuments / (numberOfRuns * (sleep / 1000));
+			final Number[] d = new Number[] { numberOfRuns * (sleep / 1000), numThreads, numRequests, numRequests * batchSize, throughput, average,
 					min, max, p50th, p95th, p99th };
 			out.println(Stream.of(d).map(n -> n.toString()).reduce((a, b) -> a + ", " + b).get());
 		}
