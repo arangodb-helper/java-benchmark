@@ -149,6 +149,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "number of array fields to be indexed", defaultValue = "1")
 	private Integer docNumIndexArrays;
 
+	@CliOptionInfo(description = "verbose log output", defaultValue = "true")
+	private Boolean verbose;
+
 	public CliOptions() {
 		super();
 	}
@@ -465,4 +468,11 @@ public class CliOptions {
 		this.docNumIndexArrays = docNumIndexArrays;
 	}
 
+	public Boolean getVerbose() {
+		return verbose;
+	}
+
+	public void setVerbose(final Boolean verbose) {
+		this.verbose = verbose;
+	}
 }
