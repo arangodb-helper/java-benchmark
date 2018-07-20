@@ -39,7 +39,7 @@ import com.arangodb.util.MapBuilder;
  */
 public class AqlReadTestCase extends ArangoTestCase {
 
-	private static final AqlQueryOptions QUERY_OPTIONS = new AqlQueryOptions();
+	private final AqlQueryOptions queryOptions;
 	private final ArangoDatabase db;
 	private final String collection;
 	private final KeyGen keyGen;
@@ -51,6 +51,7 @@ public class AqlReadTestCase extends ArangoTestCase {
 		this.keyGen = keyGen;
 		db = arango.db(options.getDatabase());
 		collection = options.getCollection();
+		queryOptions = new AqlQueryOptions().batchSize(options.getCursorBatchSize()).stream(options.getCursorStream());
 	}
 
 	@Override
@@ -73,7 +74,7 @@ public class AqlReadTestCase extends ArangoTestCase {
 			query = "FOR i IN @@collection FILTER i._key IN @key RETURN i";
 			bindVars.put("key", keys);
 		}
-		final List<BaseDocument> result = db.query(query, bindVars.get(), QUERY_OPTIONS, BaseDocument.class)
+		final List<BaseDocument> result = db.query(query, bindVars.get(), queryOptions, BaseDocument.class)
 				.asListRemaining();
 		final int numDocs = result.size();
 		if (batchSize == 1 && numDocs < 1) {

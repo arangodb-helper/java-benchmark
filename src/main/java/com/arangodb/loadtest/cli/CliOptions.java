@@ -155,6 +155,12 @@ public class CliOptions {
 	@CliOptionInfo(description = "File path of output file", defaultValue = "")
 	private String outputFile;
 
+	@CliOptionInfo(description = "AQL cursor batch size", defaultValue = "1000")
+	private Integer cursorBatchSize;
+
+	@CliOptionInfo(description = "AQL cursor stream", defaultValue = "false")
+	private Boolean cursorStream;
+
 	public CliOptions() {
 		super();
 	}
@@ -485,6 +491,22 @@ public class CliOptions {
 
 	public void setOutputFile(final String outputFile) {
 		this.outputFile = outputFile;
+	}
+
+	public Integer getCursorBatchSize() {
+		return cursorBatchSize;
+	}
+
+	public void setCursorBatchSize(final Integer cursorBatchSize) {
+		this.cursorBatchSize = cursorBatchSize;
+	}
+
+	public Boolean getCursorStream() {
+		return cursorStream;
+	}
+
+	public void setCursorStream(final Boolean cursorStream) {
+		this.cursorStream = cursorStream;
 	}
 
 }
