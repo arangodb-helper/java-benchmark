@@ -22,6 +22,9 @@ package com.arangodb.loadtest;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -102,10 +105,26 @@ public class App {
 				new HelpFormatter().printHelp(USAGE_INFO, opts);
 				System.exit(1);
 			}
-			run(app, options, builder, tests, System.out);
+			try (PrintStream out = createPrintStream(options)) {
+				run(app, options, builder, tests, out);
+			}
 		} catch (final Exception e) {
 			LOGGER.error("Failed", e);
 		}
+	}
+
+	private static PrintStream createPrintStream(final CliOptions options) throws IOException {
+		final PrintStream out;
+		final String outputFile = options.getOutputFile();
+		if (outputFile.isEmpty()) {
+			out = System.out;
+		} else {
+			final Path path = Paths.get(outputFile);
+			Files.deleteIfExists(path);
+			Files.createFile(path);
+			out = new PrintStream(Files.newOutputStream(path));
+		}
+		return out;
 	}
 
 	private static SSLContext createSslContext() throws Exception {
@@ -252,10 +271,10 @@ public class App {
 			} else {
 				average = min = max = p50th = p95th = p99th = 0.;
 			}
-			// NumberOfRuns > 0 and sleep > 0 
-			double throughput = totalDocuments / (numberOfRuns * (sleep / 1000));
-			final Number[] d = new Number[] { numberOfRuns * (sleep / 1000), numThreads, numRequests, numRequests * batchSize, throughput, average,
-					min, max, p50th, p95th, p99th };
+			// NumberOfRuns > 0 and sleep > 0
+			final double throughput = totalDocuments / (numberOfRuns * (sleep / 1000));
+			final Number[] d = new Number[] { numberOfRuns * (sleep / 1000), numThreads, numRequests,
+					numRequests * batchSize, throughput, average, min, max, p50th, p95th, p99th };
 			out.println(Stream.of(d).map(n -> n.toString()).reduce((a, b) -> a + "," + b).get());
 		}
 	}

@@ -152,6 +152,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "verbose log output", defaultValue = "true")
 	private Boolean verbose;
 
+	@CliOptionInfo(description = "File path of output file", defaultValue = "")
+	private String outputFile;
+
 	public CliOptions() {
 		super();
 	}
@@ -475,4 +478,13 @@ public class CliOptions {
 	public void setVerbose(final Boolean verbose) {
 		this.verbose = verbose;
 	}
+
+	public String getOutputFile() {
+		return outputFile;
+	}
+
+	public void setOutputFile(final String outputFile) {
+		this.outputFile = outputFile;
+	}
+
 }
