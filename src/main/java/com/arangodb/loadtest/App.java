@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import com.arangodb.ArangoDB;
 import com.arangodb.loadtest.cli.CliOptionUtils;
 import com.arangodb.loadtest.cli.CliOptions;
+import com.arangodb.loadtest.testcase.AqlReadTestCase;
 import com.arangodb.loadtest.testcase.DocumentImportTestCase;
 import com.arangodb.loadtest.testcase.DocumentInsertTestCase;
 import com.arangodb.loadtest.testcase.DocumentReadTestCase;
@@ -196,6 +197,10 @@ public class App {
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, n, t, k, d) -> new DocumentReplaceTestCase(b, o, n, t, k, d),
 							new DocumentCreator(options), i.get());
+					break;
+				case AQL_GET:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new AqlReadTestCase(b, o, n, t, k), null, i.get());
 					break;
 				default:
 					continue;
