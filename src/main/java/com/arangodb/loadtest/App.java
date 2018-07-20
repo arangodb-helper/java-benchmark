@@ -53,6 +53,7 @@ import com.arangodb.loadtest.cli.CliOptionUtils;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.testcase.AqlInsertTestCase;
 import com.arangodb.loadtest.testcase.AqlReadTestCase;
+import com.arangodb.loadtest.testcase.AqlReplaceTestCase;
 import com.arangodb.loadtest.testcase.DocumentImportTestCase;
 import com.arangodb.loadtest.testcase.DocumentInsertTestCase;
 import com.arangodb.loadtest.testcase.DocumentReadTestCase;
@@ -207,6 +208,11 @@ public class App {
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, n, t, k, d) -> new AqlInsertTestCase(b, o, n, t, k, d), new DocumentCreator(options),
 							i.get());
+					break;
+				case AQL_REPLACE:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new AqlReplaceTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options), i.get());
 					break;
 				default:
 					continue;

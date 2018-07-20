@@ -39,7 +39,7 @@ import com.arangodb.velocypack.VPackSlice;
  * @author Mark Vollmary
  *
  */
-public class AqlInsertTestCase extends ArangoTestCase {
+public class AqlReplaceTestCase extends ArangoTestCase {
 
 	private final DocumentCreator documentCreator;
 	private final AqlQueryOptions queryOptions;
@@ -48,7 +48,7 @@ public class AqlInsertTestCase extends ArangoTestCase {
 	private final KeyGen keyGen;
 	private List<BaseDocument> documents;
 
-	public AqlInsertTestCase(final ArangoDB.Builder builder, final CliOptions options, final int num,
+	public AqlReplaceTestCase(final ArangoDB.Builder builder, final CliOptions options, final int num,
 		final Collection<Long> times, final KeyGen keyGen, final DocumentCreator documentCreator) {
 		super(builder, options, num, times);
 		this.keyGen = keyGen;
@@ -72,10 +72,10 @@ public class AqlInsertTestCase extends ArangoTestCase {
 		final MapBuilder bindVars = new MapBuilder();
 		bindVars.put("@collection", collection);
 		if (batchSize == 1) {
-			query = "INSERT @doc IN @@collection";
+			query = "REPLACE @doc IN @@collection";
 			bindVars.put("doc", documents.get(0));
 		} else {
-			query = "FOR i IN @docs INSERT i IN @@collection";
+			query = "FOR i IN @docs REPLACE i IN @@collection";
 			bindVars.put("docs", documents);
 		}
 		db.query(query, bindVars.get(), queryOptions, VPackSlice.class);
