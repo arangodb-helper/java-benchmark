@@ -116,7 +116,7 @@ public class App {
 	private static PrintStream createPrintStream(final CliOptions options) throws IOException {
 		final PrintStream out;
 		final String outputFile = options.getOutputFile();
-		if (outputFile.isEmpty()) {
+		if (outputFile == null || outputFile.isEmpty()) {
 			out = System.out;
 		} else {
 			final Path path = Paths.get(outputFile);
