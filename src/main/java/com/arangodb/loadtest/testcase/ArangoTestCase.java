@@ -24,6 +24,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDBException;
 import com.arangodb.loadtest.cli.CliOptions;
@@ -36,6 +39,8 @@ import com.arangodb.loadtest.util.Stopwatch;
  *
  */
 public abstract class ArangoTestCase implements Closeable {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ArangoTestCase.class);
 
 	public static interface InstanceCreator {
 		ArangoTestCase create(
@@ -69,7 +74,11 @@ public abstract class ArangoTestCase implements Closeable {
 	public void run() throws ArangoDBException {
 		_prepare();
 		final Stopwatch sw = new Stopwatch();
-		_run();
+		try {
+			_run();
+		} catch (final ArangoDBException e) {
+			LOGGER.error("Error during test run", e);
+		}
 		final long elapsedTime = sw.getElapsedTime();
 		times.add(elapsedTime);
 	};
