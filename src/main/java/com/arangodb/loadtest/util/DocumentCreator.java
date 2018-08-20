@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.BaseEdgeDocument;
 import com.arangodb.loadtest.cli.CliOptions;
 
 /**
@@ -46,6 +47,7 @@ public class DocumentCreator {
 	public static final String FIELD_OBJECT = "object";
 
 	private final List<BaseDocument> cache;
+	private final List<BaseEdgeDocument> edgeCache;
 	private final CliOptions options;
 
 	public DocumentCreator(final CliOptions options) {
@@ -53,6 +55,8 @@ public class DocumentCreator {
 		this.options = options;
 		cache = Stream.generate(() -> createObject(0)).limit(options.getBatchSize()).map(obj -> new BaseDocument(obj))
 				.collect(Collectors.toList());
+		edgeCache = Stream.generate(() -> createEdge()).limit(options.getBatchSize())
+				.map(obj -> new BaseEdgeDocument(obj)).collect(Collectors.toList());
 	}
 
 	private void createSimple(final Map<String, Object> doc) {
@@ -90,6 +94,13 @@ public class DocumentCreator {
 		return doc;
 	}
 
+	private Map<String, Object> createEdge() {
+		final Map<String, Object> edge = createObject(0);
+		edge.put("_from", options.getVertexCollection() + "/dummy");
+		edge.put("_to", options.getVertexCollection() + "/dummy");
+		return edge;
+	}
+
 	private static String createString(final int size) {
 		return RandomStringUtils.random(size, false, true);
 	}
@@ -102,6 +113,12 @@ public class DocumentCreator {
 		final Iterator<String> iterator = keys.iterator();
 		cache.forEach(e -> e.setKey(iterator.next()));
 		return cache;
+	}
+
+	public List<BaseEdgeDocument> createEdge(final Collection<String> keys) {
+		final Iterator<String> iterator = keys.iterator();
+		edgeCache.forEach(e -> e.setKey(iterator.next()));
+		return edgeCache;
 	}
 
 }

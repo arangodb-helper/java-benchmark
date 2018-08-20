@@ -54,6 +54,9 @@ java -jar arangodb-java-benchmark.jar --test document_insert
                                               (if > 0 the option 'requests' is ignored) (default: 0)
  -e,--endpoints <String>                      comma separated list of endpoints to connect to
                                               (default: 127.0.0.1:8529)
+    --edgeCollection <String>                 edge collection name to use in graph (default:
+                                              ArangoJavaBenchmarkEdge)
+    --graph <String>                          graph name to use in test (default: ArangoJavaBenchmarkGraph)
     --keyPrefix <String>                      document key prefix (necessary only when run multiple times)
     --loadBalancing <LoadBalancingStrategy>   load balancing strategy to use (for cluster setup).
                                               possible values: "none", "round_robin", "one_random"
@@ -72,5 +75,7 @@ java -jar arangodb-java-benchmark.jar --test document_insert
                                               "document_update", "document_replace"
     --threads <Integer>                       number of parallel client threads (default: 1)
  -u,--user <String>                           username to use when connecting (default: root)
+    --vertexCollection <String>               vertex collection name to use in graph (default:
+                                              ArangoJavaBenchmarkVertex)
     --waitForSync <Boolean>                   use waitForSync for created collections (default: false)
 ```

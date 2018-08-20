@@ -77,11 +77,20 @@ public class CliOptions {
 	@CliOptionInfo(description = "drop DB before run", defaultValue = "false")
 	private Boolean dropDB;
 
-	@CliOptionInfo(description = "database name to use in test", defaultValue = "ArangoJavaBenchmark")
+	@CliOptionInfo(description = "database name to use in test", defaultValue = "ArangoJavaBenchmarkDB")
 	private String database;
 
-	@CliOptionInfo(description = "collection name to use in test", defaultValue = "ArangoJavaBenchmark")
+	@CliOptionInfo(description = "collection name to use in test", defaultValue = "ArangoJavaBenchmarkCollection")
 	private String collection;
+
+	@CliOptionInfo(description = "graph name to use in test", defaultValue = "ArangoJavaBenchmarkGraph")
+	private String graph;
+
+	@CliOptionInfo(description = "vertex collection name to use in graph", defaultValue = "ArangoJavaBenchmarkVertex")
+	private String vertexCollection;
+
+	@CliOptionInfo(description = "edge collection name to use in graph", defaultValue = "ArangoJavaBenchmarkEdge")
+	private String edgeCollection;
 
 	@CliOptionInfo(description = "number of shards of created collections", defaultValue = "1")
 	private Integer numberOfShards;
@@ -299,6 +308,30 @@ public class CliOptions {
 
 	public void setCollection(final String collection) {
 		this.collection = collection;
+	}
+
+	public String getGraph() {
+		return graph;
+	}
+
+	public void setGraph(final String graph) {
+		this.graph = graph;
+	}
+
+	public String getVertexCollection() {
+		return vertexCollection;
+	}
+
+	public void setVertexCollection(final String vertexCollection) {
+		this.vertexCollection = vertexCollection;
+	}
+
+	public String getEdgeCollection() {
+		return edgeCollection;
+	}
+
+	public void setEdgeCollection(final String edgeCollection) {
+		this.edgeCollection = edgeCollection;
 	}
 
 	public Integer getNumberOfShards() {

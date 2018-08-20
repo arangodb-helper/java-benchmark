@@ -59,8 +59,16 @@ import com.arangodb.loadtest.testcase.DocumentInsertTestCase;
 import com.arangodb.loadtest.testcase.DocumentReadTestCase;
 import com.arangodb.loadtest.testcase.DocumentReplaceTestCase;
 import com.arangodb.loadtest.testcase.DocumentUpdateTestCase;
+import com.arangodb.loadtest.testcase.EdgeInsertTestCase;
+import com.arangodb.loadtest.testcase.EdgeReadTestCase;
+import com.arangodb.loadtest.testcase.EdgeReplaceTestCase;
+import com.arangodb.loadtest.testcase.EdgeUpdateTestCase;
 import com.arangodb.loadtest.testcase.GetVersionTestCase;
 import com.arangodb.loadtest.testcase.TestCase;
+import com.arangodb.loadtest.testcase.VertexInsertTestCase;
+import com.arangodb.loadtest.testcase.VertexReadTestCase;
+import com.arangodb.loadtest.testcase.VertexReplaceTestCase;
+import com.arangodb.loadtest.testcase.VertexUpdateTestCase;
 import com.arangodb.loadtest.util.DatabaseSetupUtils;
 import com.arangodb.loadtest.util.DocumentCreator;
 import com.arangodb.loadtest.worker.ThreadWorker;
@@ -212,6 +220,44 @@ public class App {
 				case AQL_REPLACE:
 					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
 							(b, o, n, t, k, d) -> new AqlReplaceTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options), i.get());
+					break;
+				case VERTEX_GET:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new VertexReadTestCase(b, o, n, t, k), null, i.get());
+					break;
+				case VERTEX_INSERT:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new VertexInsertTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options), i.get());
+					break;
+				case VERTEX_UPDATE:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new VertexUpdateTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options), i.get());
+					break;
+				case VERTEX_REPLACE:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new VertexReplaceTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options), i.get());
+					break;
+				case EDGE_GET:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new EdgeReadTestCase(b, o, n, t, k), null, i.get());
+					break;
+				case EDGE_INSERT:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new EdgeInsertTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options), i.get());
+					break;
+				case EDGE_UPDATE:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new EdgeUpdateTestCase(b, o, n, t, k, d),
+							new DocumentCreator(options), i.get());
+					break;
+				case EDGE_REPLACE:
+					creator = (num, times) -> new ThreadWorker(builder, options, num, times,
+							(b, o, n, t, k, d) -> new EdgeReplaceTestCase(b, o, n, t, k, d),
 							new DocumentCreator(options), i.get());
 					break;
 				default:

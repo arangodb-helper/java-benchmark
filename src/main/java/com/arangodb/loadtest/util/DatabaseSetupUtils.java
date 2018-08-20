@@ -20,10 +20,12 @@
 
 package com.arangodb.loadtest.util;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +34,16 @@ import com.arangodb.ArangoCollection;
 import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDB.Builder;
 import com.arangodb.ArangoDBException;
+import com.arangodb.ArangoDatabase;
+import com.arangodb.ArangoGraph;
+import com.arangodb.entity.BaseDocument;
+import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.cli.Index;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
+import com.arangodb.model.GraphCreateOptions;
 import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
 import com.arangodb.model.SkiplistIndexOptions;
@@ -56,42 +63,63 @@ public class DatabaseSetupUtils {
 	public static void setup(final Builder builder, final CliOptions options, final boolean dropDB)
 			throws ArangoDBException {
 		final ArangoDB arangoDB = builder.build();
-		final String database = options.getDatabase();
+		final ArangoDatabase db = arangoDB.db(options.getDatabase());
 		if (dropDB) {
 			try {
-				arangoDB.db(database).drop();
+				db.drop();
 			} catch (final ArangoDBException e) {
 			}
-		} else {
-                  return;
-                }
+		}
 		try {
-			arangoDB.createDatabase(database);
+			if (!db.exists()) {
+				db.create();
+			}
 		} catch (final ArangoDBException e) {
-			if (!arangoDB.db(database).exists()) {
-				LOGGER.error(String.format("Failed to create database: %s", database));
+			if (!db.exists()) {
+				LOGGER.error(String.format("Failed to create database: %s", db.name()));
 			}
 		}
-		final String collection = options.getCollection();
+		final ArangoCollection collection = db.collection(options.getCollection());
 		try {
-			arangoDB.db(database).createCollection(collection,
-				new CollectionCreateOptions().numberOfShards(options.getNumberOfShards())
+			if (!collection.exists()) {
+				collection.create(new CollectionCreateOptions().numberOfShards(options.getNumberOfShards())
 						.replicationFactor(options.getReplicationFactor()).waitForSync(options.getWaitForSync()));
+			}
 		} catch (final Exception e) {
-			if (!arangoDB.db(database).collection(collection).exists()) {
-				LOGGER.error(String.format("Failed to create collection %s", collection));
+			if (!collection.exists()) {
+				LOGGER.error(String.format("Failed to create collection %s", collection.name()));
 			}
 		}
-		final ArangoCollection colHandle = arangoDB.db(database).collection(collection);
+		final ArangoGraph graph = db.graph(options.getGraph());
+		try {
+			if (!graph.exists()) {
+				graph.create(
+					Arrays.asList(new EdgeDefinition().collection(options.getEdgeCollection())
+							.from(options.getVertexCollection()).to(options.getVertexCollection())),
+					new GraphCreateOptions().numberOfShards(options.getNumberOfShards())
+							.replicationFactor(options.getReplicationFactor()));
+			}
+		} catch (final Exception e) {
+			if (!graph.exists()) {
+				LOGGER.error(String.format("Failed to create graph %s", graph.name()));
+			}
+		}
 
-		createIndex(options, colHandle, options.getDocIndexSimple(), options.getDocNumIndexSimple(),
-			DocumentCreator.FIELD_SIMPLE);
-		createIndex(options, colHandle, options.getDocIndexLargeSimple(), options.getDocNumIndexLargeSimple(),
-			DocumentCreator.FIELD_LARGE);
-		createIndex(options, colHandle, options.getDocIndexArrays(), options.getDocNumIndexArrays(),
-			DocumentCreator.FIELD_ARRAY);
-		createIndex(options, colHandle, options.getDocIndexObjects(), options.getDocNumIndexObjects(),
-			DocumentCreator.FIELD_OBJECT);
+		Stream.of(options.getCollection(), options.getVertexCollection(), options.getEdgeCollection())
+				.map(name -> db.collection(name)).forEach(colHandle -> {
+					createIndex(options, colHandle, options.getDocIndexSimple(), options.getDocNumIndexSimple(),
+						DocumentCreator.FIELD_SIMPLE);
+					createIndex(options, colHandle, options.getDocIndexLargeSimple(),
+						options.getDocNumIndexLargeSimple(), DocumentCreator.FIELD_LARGE);
+					createIndex(options, colHandle, options.getDocIndexArrays(), options.getDocNumIndexArrays(),
+						DocumentCreator.FIELD_ARRAY);
+					createIndex(options, colHandle, options.getDocIndexObjects(), options.getDocNumIndexObjects(),
+						DocumentCreator.FIELD_OBJECT);
+				});
+
+		// create dummy vertex for edge tests
+		graph.vertexCollection(options.getVertexCollection()).insertVertex(new BaseDocument("dummy"));
+
 		arangoDB.shutdown();
 	}
 
