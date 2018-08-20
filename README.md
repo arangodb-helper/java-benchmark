@@ -72,7 +72,10 @@ java -jar arangodb-java-benchmark.jar --test document_insert
  -t,--test <Collection>                       comma separeted list of test cases to use.
                                               possible values: "version", "document_get",
                                               "document_insert", "document_import",
-                                              "document_update", "document_replace"
+                                              "document_update", "document_replace",
+                                              "vertex_get", "vertex_insert", "vertex_update",
+                                              "vertex_replace", "edge_get", "edge_insert",
+                                              "edge_update", "edge_replace"
     --threads <Integer>                       number of parallel client threads (default: 1)
  -u,--user <String>                           username to use when connecting (default: root)
     --vertexCollection <String>               vertex collection name to use in graph (default:
