@@ -66,6 +66,8 @@ java -jar arangodb-java-benchmark.jar --test document_insert
  -p,--password <String>                       password to use when connecting.
     --protocol <Protocol>                     network protocol to use. possible values: "vst",
                                               "http_json", "http_vpack" (default: vst)
+    --query <String>                          Custom AQL query (supported bind params: @@collection,
+                                              @@vertex, @@edge, @graph, @doc, @docs, @key, @@keys)
     --replicationFactor <Integer>             replication factor of created collections (default: 1)
     --requests <Integer>                      number of operations per thread (default: 1000)
     --runs <Integer>                          run test n times. drop database between runs (default: 1)
@@ -73,6 +75,7 @@ java -jar arangodb-java-benchmark.jar --test document_insert
                                               possible values: "version", "document_get",
                                               "document_insert", "document_import",
                                               "document_update", "document_replace",
+                                              "aql_custom", "aql_get", "aql_insert", "aql_replace", 
                                               "vertex_get", "vertex_insert", "vertex_update",
                                               "vertex_replace", "edge_get", "edge_insert",
                                               "edge_update", "edge_replace"

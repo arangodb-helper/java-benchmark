@@ -170,6 +170,9 @@ public class CliOptions {
 	@CliOptionInfo(description = "AQL cursor stream", defaultValue = "false")
 	private Boolean cursorStream;
 
+	@CliOptionInfo(description = "Custom AQL query (supported bind params: @@collection, @@vertex, @@edge, @graph, @doc, @docs, @key, @@keys)", defaultValue = "")
+	private String query;
+
 	public CliOptions() {
 		super();
 	}
@@ -540,6 +543,14 @@ public class CliOptions {
 
 	public void setCursorStream(final Boolean cursorStream) {
 		this.cursorStream = cursorStream;
+	}
+
+	public String getQuery() {
+		return query;
+	}
+
+	public void setQuery(final String query) {
+		this.query = query;
 	}
 
 }
