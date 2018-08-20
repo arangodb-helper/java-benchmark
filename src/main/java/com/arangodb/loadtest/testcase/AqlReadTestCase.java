@@ -71,8 +71,8 @@ public class AqlReadTestCase extends ArangoTestCase {
 			query = "FOR i IN @@collection FILTER i._key == @key LIMIT 1 RETURN i";
 			bindVars.put("key", keys.get(0));
 		} else {
-			query = "FOR i IN @@collection FILTER i._key IN @key RETURN i";
-			bindVars.put("key", keys);
+			query = "FOR i IN @@collection FILTER i._key IN @keys RETURN i";
+			bindVars.put("keys", keys);
 		}
 		final List<BaseDocument> result = db.query(query, bindVars.get(), queryOptions, BaseDocument.class)
 				.asListRemaining();
