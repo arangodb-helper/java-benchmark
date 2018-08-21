@@ -163,7 +163,7 @@ public class App {
 		final Collection<TestCase> tests,
 		final PrintStream out) throws InterruptedException, IOException {
 		final boolean dropDB = options.getDropDB() != null && options.getDropDB().booleanValue();
-		DatabaseSetupUtils.setup(builder, options, dropDB);
+		DatabaseSetupUtils.setup(builder, options, dropDB, tests);
 		for (final AtomicInteger i = new AtomicInteger(0); i.get() < options.getRuns(); i.incrementAndGet()) {
 			final Integer delay = options.getDelay();
 			if (i.get() > 0 && delay > 0) {

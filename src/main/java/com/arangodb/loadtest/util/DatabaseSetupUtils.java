@@ -40,6 +40,7 @@ import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.loadtest.cli.CliOptions;
 import com.arangodb.loadtest.cli.Index;
+import com.arangodb.loadtest.testcase.TestCase;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.FulltextIndexOptions;
 import com.arangodb.model.GeoIndexOptions;
@@ -60,8 +61,11 @@ public class DatabaseSetupUtils {
 		super();
 	}
 
-	public static void setup(final Builder builder, final CliOptions options, final boolean dropDB)
-			throws ArangoDBException {
+	public static void setup(
+		final Builder builder,
+		final CliOptions options,
+		final boolean dropDB,
+		final Collection<TestCase> tests) throws ArangoDBException {
 		final ArangoDB arangoDB = builder.build();
 		final ArangoDatabase db = arangoDB.db(options.getDatabase());
 		if (dropDB) {
@@ -90,35 +94,44 @@ public class DatabaseSetupUtils {
 				LOGGER.error(String.format("Failed to create collection %s", collection.name()));
 			}
 		}
-		final ArangoGraph graph = db.graph(options.getGraph());
-		try {
-			if (!graph.exists()) {
-				graph.create(
-					Arrays.asList(new EdgeDefinition().collection(options.getEdgeCollection())
-							.from(options.getVertexCollection()).to(options.getVertexCollection())),
-					new GraphCreateOptions().numberOfShards(options.getNumberOfShards())
-							.replicationFactor(options.getReplicationFactor()));
+
+		final Collection<TestCase> testCaseRequireGraph = Arrays.asList(TestCase.VERTEX_GET, TestCase.VERTEX_INSERT,
+			TestCase.VERTEX_REPLACE, TestCase.VERTEX_UPDATE, TestCase.EDGE_GET, TestCase.EDGE_INSERT,
+			TestCase.EDGE_REPLACE, TestCase.EDGE_UPDATE, TestCase.AQL_CUSTOM);
+		final boolean requireGraph = tests.stream().anyMatch(test -> testCaseRequireGraph.contains(test));
+		if (requireGraph) {
+			final ArangoGraph graph = db.graph(options.getGraph());
+			try {
+				if (!graph.exists()) {
+					graph.create(
+						Arrays.asList(new EdgeDefinition().collection(options.getEdgeCollection())
+								.from(options.getVertexCollection()).to(options.getVertexCollection())),
+						new GraphCreateOptions().numberOfShards(options.getNumberOfShards())
+								.replicationFactor(options.getReplicationFactor()));
+				}
+			} catch (final Exception e) {
+				if (!graph.exists()) {
+					LOGGER.error(String.format("Failed to create graph %s", graph.name()));
+				}
 			}
-		} catch (final Exception e) {
-			if (!graph.exists()) {
-				LOGGER.error(String.format("Failed to create graph %s", graph.name()));
+
+			Stream.of(options.getCollection(), options.getVertexCollection(), options.getEdgeCollection())
+					.map(name -> db.collection(name)).forEach(colHandle -> {
+						createIndex(options, colHandle, options.getDocIndexSimple(), options.getDocNumIndexSimple(),
+							DocumentCreator.FIELD_SIMPLE);
+						createIndex(options, colHandle, options.getDocIndexLargeSimple(),
+							options.getDocNumIndexLargeSimple(), DocumentCreator.FIELD_LARGE);
+						createIndex(options, colHandle, options.getDocIndexArrays(), options.getDocNumIndexArrays(),
+							DocumentCreator.FIELD_ARRAY);
+						createIndex(options, colHandle, options.getDocIndexObjects(), options.getDocNumIndexObjects(),
+							DocumentCreator.FIELD_OBJECT);
+					});
+
+			if (db.collection(options.getVertexCollection()).exists()) {
+				// create dummy vertex for edge tests
+				db.collection(options.getVertexCollection()).insertDocument(new BaseDocument("dummy"));
 			}
 		}
-
-		Stream.of(options.getCollection(), options.getVertexCollection(), options.getEdgeCollection())
-				.map(name -> db.collection(name)).forEach(colHandle -> {
-					createIndex(options, colHandle, options.getDocIndexSimple(), options.getDocNumIndexSimple(),
-						DocumentCreator.FIELD_SIMPLE);
-					createIndex(options, colHandle, options.getDocIndexLargeSimple(),
-						options.getDocNumIndexLargeSimple(), DocumentCreator.FIELD_LARGE);
-					createIndex(options, colHandle, options.getDocIndexArrays(), options.getDocNumIndexArrays(),
-						DocumentCreator.FIELD_ARRAY);
-					createIndex(options, colHandle, options.getDocIndexObjects(), options.getDocNumIndexObjects(),
-						DocumentCreator.FIELD_OBJECT);
-				});
-
-		// create dummy vertex for edge tests
-		graph.vertexCollection(options.getVertexCollection()).insertVertex(new BaseDocument("dummy"));
 
 		arangoDB.shutdown();
 	}
