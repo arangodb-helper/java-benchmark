@@ -48,6 +48,9 @@ import com.arangodb.model.GraphCreateOptions;
 import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.PersistentIndexOptions;
 import com.arangodb.model.SkiplistIndexOptions;
+import com.arangodb.model.arangosearch.ArangoSearchCreateOptions;
+import com.arangodb.entity.arangosearch.FieldLink;
+import com.arangodb.entity.arangosearch.CollectionLink;
 
 /**
  * @author Mark Vollmary
@@ -99,6 +102,7 @@ public class DatabaseSetupUtils {
 			TestCase.VERTEX_REPLACE, TestCase.VERTEX_UPDATE, TestCase.EDGE_GET, TestCase.EDGE_INSERT,
 			TestCase.EDGE_REPLACE, TestCase.EDGE_UPDATE, TestCase.AQL_CUSTOM);
 		final boolean requireGraph = tests.stream().anyMatch(test -> testCaseRequireGraph.contains(test));
+
 		if (requireGraph) {
 			final ArangoGraph graph = db.graph(options.getGraph());
 			try {
@@ -114,27 +118,46 @@ public class DatabaseSetupUtils {
 					LOGGER.error(String.format("Failed to create graph %s", graph.name()));
 				}
 			}
-
-			Stream.of(options.getCollection(), options.getVertexCollection(), options.getEdgeCollection())
-					.map(name -> db.collection(name)).forEach(colHandle -> {
-						createIndex(options, colHandle, options.getDocIndexSimple(), options.getDocNumIndexSimple(),
-							DocumentCreator.FIELD_SIMPLE);
-						createIndex(options, colHandle, options.getDocIndexLargeSimple(),
-							options.getDocNumIndexLargeSimple(), DocumentCreator.FIELD_LARGE);
-						createIndex(options, colHandle, options.getDocIndexArrays(), options.getDocNumIndexArrays(),
-							DocumentCreator.FIELD_ARRAY);
-						createIndex(options, colHandle, options.getDocIndexObjects(), options.getDocNumIndexObjects(),
-							DocumentCreator.FIELD_OBJECT);
-					});
-
-			if (db.collection(options.getVertexCollection()).exists()) {
-				// create dummy vertex for edge tests
-				db.collection(options.getVertexCollection()).insertDocument(new BaseDocument("dummy"));
-			}
+      if (db.collection(options.getVertexCollection()).exists()) {
+        // create dummy vertex for edge tests
+        db.collection(options.getVertexCollection()).insertDocument(new BaseDocument("dummy"));
+      }
 		}
+
+    try {
+      Stream<String> s = requireGraph ? Stream.of(options.getCollection(), options.getVertexCollection(), options.getEdgeCollection()) : Stream.of(options.getCollection()); 
+      s.map(name -> db.collection(name))
+       .forEach(colHandle -> {
+         createIndex(options, colHandle, options.getDocIndexSimple(), options.getDocNumIndexSimple(),
+           DocumentCreator.FIELD_SIMPLE);
+         createIndex(options, colHandle, options.getDocIndexLargeSimple(),
+           options.getDocNumIndexLargeSimple(), DocumentCreator.FIELD_LARGE);
+         createIndex(options, colHandle, options.getDocIndexArrays(), options.getDocNumIndexArrays(),
+           DocumentCreator.FIELD_ARRAY);
+         createIndex(options, colHandle, options.getDocIndexObjects(), options.getDocNumIndexObjects(),
+           DocumentCreator.FIELD_OBJECT);
+         createView(options, db, colHandle, options.getDocView(), DocumentCreator.FIELD_LARGE);
+       });
+    } catch (Exception e) {
+      LOGGER.error("There was an error in index creation:");
+      LOGGER.error(e.toString());
+    }
 
 		arangoDB.shutdown();
 	}
+
+  private static void createView(
+		final CliOptions options,
+    final ArangoDatabase db,
+		final ArangoCollection colHandle,
+    final boolean viewForField,
+		final String field) {
+    if (viewForField) {
+      ArangoSearchCreateOptions opts = new ArangoSearchCreateOptions();
+      opts.link(CollectionLink.on(colHandle.name()).fields(FieldLink.on(field)));
+      db.createArangoSearch("MySearch", opts);
+    }
+  }
 
 	private static void createIndex(
 		final CliOptions options,

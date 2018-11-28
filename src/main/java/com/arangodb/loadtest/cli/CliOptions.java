@@ -149,6 +149,10 @@ public class CliOptions {
 	@CliOptionInfo(description = "comma separated list of types of indexes on nested objects", componentType = Index.class)
 	private Collection<Index> docIndexObjects;
 
+
+	@CliOptionInfo(description = "if you want to create a view", defaultValue = "false")
+	private Boolean docView;
+
 	@CliOptionInfo(description = "number of nexted objects to be indexed", defaultValue = "1")
 	private Integer docNumIndexObjects;
 
@@ -483,6 +487,14 @@ public class CliOptions {
 
 	public Collection<Index> getDocIndexObjects() {
 		return docIndexObjects;
+	}
+
+  public boolean getDocView() {
+    return docView;
+  }
+
+	public void setDocView(final Boolean docView) {
+		this.docView = docView;
 	}
 
 	public void setDocIndexObjects(final Collection<Index> docIndexObjects) {
