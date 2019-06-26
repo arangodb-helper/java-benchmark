@@ -118,10 +118,15 @@ public class DatabaseSetupUtils {
 					LOGGER.error(String.format("Failed to create graph %s", graph.name()));
 				}
 			}
-      if (db.collection(options.getVertexCollection()).exists()) {
-        // create dummy vertex for edge tests
-        db.collection(options.getVertexCollection()).insertDocument(new BaseDocument("dummy"));
-      }
+            if (db.collection(options.getVertexCollection()).exists()) {
+                // create dummy vertex for edge tests
+                try {
+                    db.collection(options.getVertexCollection()).insertDocument(new BaseDocument("dummy"));
+                } catch (final Exception e) {
+                    // This is not an error if the vertex exists already.
+                    LOGGER.error(String.format("Cannot insert dummy vertex."));
+                }
+            }
 		}
 
     try {
