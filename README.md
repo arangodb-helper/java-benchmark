@@ -13,6 +13,12 @@ mvn package
 java -jar arangodb-java-benchmark.jar --test document_insert
 ```
 
+Note that you have to run an `insert` benchmark before you can run any of the others, i.e. to run
+`document_update` you first have to run `document_insert`.
+
+It is not necessary to run `vertex_insert` 
+for the `edge` tests.
+
 ## additional options
 
 ```
