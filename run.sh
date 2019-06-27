@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-
-
 set +ex
 
 #
@@ -31,24 +29,44 @@ set +ex
 #
 # Some parameters
 REQUESTS=1000000
+ARANGO_ENDPOINT="localhost:8529"
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+
+    case $key in
+        -e|--endpoint)
+            ARANGO_ENDPOINT="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        -r|--requests)
+            REQUESTS="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        -h|--help)
+            echo "Usage:"
+            echo "  -e|--endpoint   ArangoDB endpoint"
+            echo "  -r|--requests   Number of requests"
+            exit 0
+            ;;
+        *)  # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
+done
 
 # When the test was started; this is used in filenames for outputs.
 WHEN=$(date --iso-8601=minutes)
 RESULT_DIR="javabench-$WHEN/"
 
-# which arangodb endpoint to use
-if [ -z "$ARANGO_ENDPOINT" ] ; then
-    ARANGO_ENDPOINT="localhost:8529"
-fi;
-echo "Using ArangoDB endpoint $ARANGO_ENDPOINT"
-
-if [ -z "$ARANGOSH" ] ; then
-    ARANGOSH=`which arangosh`
-fi;
-if [ -z "$ARANGOSH" ] ; then
-    echo "error: cannot find arangosh."
-    exit -1
-fi;
+echo "Using"
+echo "   endpoint $ARANGO_ENDPOINT"
+echo "   for      $REQUESTS requests"
 
 #
 # runs the java benchmark, parameters as follows
