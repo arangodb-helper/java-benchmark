@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set +ex
 
+trap ctrl_c INT
+
+function ctrl_c()
+{
+    echo "CTRL+C received, quitting"
+    exit
+}
+
 #
 # Written by Markus Pfeiffer <markus@arangodb.com>
 #
@@ -21,6 +29,8 @@ set +ex
 #
 # Some parameters
 REQUESTS=1000000
+THREADS="8,32,64"
+SHARDS="3,9,27,81"
 ARANGO_ENDPOINT="localhost:8529"
 
 POSITIONAL=()
@@ -31,18 +41,30 @@ do
     case $key in
         -e|--endpoint)
             ARANGO_ENDPOINT="$2"
-            shift # past argument
-            shift # past value
+            shift
+            shift
             ;;
         -r|--requests)
             REQUESTS="$2"
-            shift # past argument
-            shift # past value
+            shift
+            shift
+            ;;
+        -s|--shards)
+            SHARDS="$2"
+            shift
+            shift
+            ;;
+        -t|--threads)
+            THREADS="$2"
+            shift
+            shift
             ;;
         -h|--help)
             echo "Usage:"
             echo "  -e|--endpoint   ArangoDB endpoint"
-            echo "  -r|--requests   Number of requests"
+            echo "  -r|--requests   number of requests"
+            echo "  -s|--shards     comma-separated list of shard numbers to test"
+            echo "  -t|--threads    comma-separated list of thread numbers to test"
             exit 0
             ;;
         *)  # unknown option
@@ -59,6 +81,8 @@ RESULT_DIR="javabench-$WHEN/"
 echo "Using"
 echo "   endpoint $ARANGO_ENDPOINT"
 echo "   for      $REQUESTS requests"
+echo "   testing  $SHARDS shards (with 32 thread)"
+echo "   testing  $THREADS threads (with 3 shards)"
 echo ""
 
 #
@@ -140,8 +164,8 @@ run() {
     run_document_bench "baseline" 1 3
     echo ""
 
-    echo "Running java-bench for thread scaling (8, 32, 64 threads, 3 shards)"
-    for nthreads in 8 32 64
+    echo "Running java-bench for thread scaling ($THREADS threads, 3 shards)"
+    for nthreads in $(echo $THREADS | tr "," "\n")
     do
         run_document_bench "document-threadscale" $nthreads 3
         run_vertex_bench "vertex-threadscale" $nthreads 3
@@ -150,8 +174,8 @@ run() {
     done
     echo ""
 
-    echo "Running java-bench for shard scaling (32 threads, 3, 9, 27, 81 shards)"
-    for nshards in 3 9 27 81
+    echo "Running java-bench for shard scaling (32 threads, $SHARDS shards)"
+    for nshards in $(echo $SHARDS | tr "," "\n")
     do
         run_document_bench "document-shardscale" 32 $nshards
         run_vertex_bench "vertex-shardscale" 32 $nshards
