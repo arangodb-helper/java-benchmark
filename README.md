@@ -20,14 +20,18 @@ the results are output as CSVs into a directory with name `javabench-$(date --is
 The following parameters are accepted:
 
 ```
- -e|--endpoint               The ArangoDB endpoint to connect to for the test (directly passed to the arangodb-java-benchmark.jar)
- -r|--requests <Integer>     Number of requests (default 1000000)
+ # ./run.sh --help
+Usage:
+  -e|--endpoint   ArangoDB endpoint
+  -r|--requests   number of requests
+  -s|--shards     comma-separated list of shard numbers to test
+  -t|--threads    comma-separated list of thread numbers to test
 ```
 
 For the 3.5 release candidates the script was run as follows
 
 ```
- # ./run.sh -e sup4.arangodb.org:8529 -r 1000000
+ # ./run.sh -e sup4.arangodb.org:8529 
 ```
 
 Where `sup4.arangodb.org` was one computer in a ArangoDB cluster started (using
