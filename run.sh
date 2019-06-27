@@ -59,6 +59,7 @@ RESULT_DIR="javabench-$WHEN/"
 echo "Using"
 echo "   endpoint $ARANGO_ENDPOINT"
 echo "   for      $REQUESTS requests"
+echo ""
 
 #
 # runs the java benchmark, parameters as follows
@@ -75,13 +76,14 @@ run_bench() {
     TEST=$2
     THREADS=$3
     SHARDS=$4
+
+    echo "Starting $TEST at $(date --iso-8601=minutes)"
     if [[ $TEST == *"insert"* ]]; then
         DROP=true
         echo " WARNING -- Dropping database in advance"
     else
         DROP=false
     fi;
-    echo "Starting $TEST at $(date --iso-8601=minutes)"
 
     java -jar target/arangodb-java-benchmark.jar \
          -e $ARANGO_ENDPOINT \
@@ -132,9 +134,11 @@ run_aql_bench() {
 run() {
     echo "Results will be stored in $RESULT_DIR"
     mkdir -p $RESULT_DIR
+    echo ""
 
     echo "Running java-bench for baseline (1 thread, 3 shards)"
     run_document_bench "baseline" 1 3
+    echo ""
 
     echo "Running java-bench for thread scaling (8, 32, 64 threads, 3 shards)"
     for nthreads in 8 32 64
@@ -144,6 +148,7 @@ run() {
         run_edge_bench "edge-threadscale" $nthreads 3
         run_aql_bench "aql-threadscale" $nthreads 3
     done
+    echo ""
 
     echo "Running java-bench for shard scaling (32 threads, 3, 9, 27, 81 shards)"
     for nshards in 3 9 27 81
