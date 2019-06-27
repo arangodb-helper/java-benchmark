@@ -1,18 +1,16 @@
 # arangodb-java-benchmark
 
+## usage
 
-## compile
+First the java code has to be compiled:
 
 ```
 mvn package
 ```
 
-## usage
+The script `run.sh` can then be used to run a series of tests, currently:
 
-The script `run.sh` can be used to run a series of tests:
-
- * currently a full suite of document tests as baseline using 1
-   thread and 3 shards
+ * a full suite of document tests as baseline using 1 thread and 3 shards
  * document, vertex, edge, and AQL tests with 8, 32, and 64 threads and 3 shards, and
  * document, vertex, edge, and AQL tests with 1 thread and 3, 9, 27, and 81 shards.
 
