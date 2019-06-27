@@ -9,17 +9,48 @@ mvn package
 
 ## usage
 
+The script `run.sh` can be used to run a series of tests:
+
+ * currently a full suite of document tests as baseline using 1
+   thread and 3 shards
+ * document, vertex, edge, and AQL tests with 8, 32, and 64 threads and 3 shards, and
+ * document, vertex, edge, and AQL tests with 1 thread and 3, 9, 27, and 81 shards.
+
+the results are output as CSVs into a directory with name `javabench-$(date --iso-8601=minutes)`
+(so for example `javabench-2019-06-26T13:12+00:00`).
+
+The following parameters are accepted:
+
 ```
-java -jar arangodb-java-benchmark.jar --test document_insert
+ -e|--endpoint               The ArangoDB endpoint to connect to for the test (directly passed to the arangodb-java-benchmark.jar)
+ -r|--requests <Integer>     Number of requests (default 1000000)
 ```
+
+For the 3.5 release candidates the script was run as follows
+
+```
+ # ./run.sh -e sup4.arangodb.org:8529 -r 1000000
+```
+
+Where `sup4.arangodb.org` was one computer in a ArangoDB cluster started (using
+the arangodb starter) on set of 3 scaleway machines.
+
+These tests run for more than a day. To have a more concise testing run
+you can decrease the number of requests.
+
+### Some internals
+
+The runscript runs `arangodb-java-benchmark.jar`.
 
 Note that you have to run an `insert` benchmark before you can run any of the others, i.e. to run
 `document_update` you first have to run `document_insert`.
 
-It is not necessary to run `vertex_insert` 
-for the `edge` tests.
+```
+java -jar arangodb-java-benchmark.jar --test document_insert
+```
+It is not necessary to run `vertex_insert` for the `edge` tests.
 
-## additional options
+#### additional options for the arangodb-java-benchmark jar
 
 ```
     --acquireHostList <Boolean>               automatic acquire list of endpoints to use for load balancing
