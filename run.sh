@@ -6,17 +6,9 @@ set +ex
 #
 # This script is supposed to run the java benchmarks in pre-release testing.
 #
-# It requires to know the path to an arangodb build to find arangosh,
-# is needed for maintenance purposes such as deleting leftover databases.
-#
 # This test is supposed to be run in a cluster of machines, so maybe in the
-# future we should add starting of that cluster into the script.
-#
-# For 3.5 I ran the arangdb starter available at
-#
-#   https://github.com/arangodb-helper/arangodb
-#
-# and ran the tests on c6, using a cluster running on c6, c7, and c8
+# future we should add starting of that cluster into the script. (or plug a
+# script in front that starts a cluster)
 #
 # TODO:
 #  * Add some results, or a place where past results can be found for
