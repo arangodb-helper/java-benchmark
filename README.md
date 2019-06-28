@@ -15,7 +15,8 @@ The script `run.sh` can then be used to run a series of tests, currently:
  * document, vertex, edge, and AQL tests with 1 thread and 3, 9, 27, and 81 shards.
 
 the results are output as CSVs into a directory with name `javabench-$(date --iso-8601=minutes)`
-(so for example `javabench-2019-06-26T13:12+00:00`).
+(so for example `javabench-2019-06-26T13:12+00:00`), and plotted using gnuplot (which needs
+to be installed for this script to run through).
 
 The following parameters are accepted:
 
